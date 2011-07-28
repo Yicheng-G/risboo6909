@@ -1,6 +1,3 @@
-import functools
-
-@functools.total_ordering
 class Value(object):
 
     def __init__(self, value, lt = None, gt = None):
@@ -15,12 +12,10 @@ class Value(object):
         return self.value == other.value if isinstance(other, Value) else other == self.value
 
     def __gt__(self, other):
-        print '__gt__', other, self
         return self.value > other.value if isinstance(other, Value) else self.value > other
 
     def __lt__(self, other):
-        print '__lt__', other, self
-        return other > self 
+        return self.value < other.value if isinstance(other, Value) else self.value < other
 
     # interface methods & properties
 
@@ -64,7 +59,7 @@ class Node(object):
     # interface methods & properties
 
     def insertValue(self, val):
-        if len(self.values) < 3:
+        if self.valcnt < 3:
             self.__values.append(Value(val))
             self.__sort3(self.__values)
 
@@ -77,10 +72,17 @@ class Node(object):
         self.__parent = obj
 
     def contains(self, a):
-        """ See if this node has contains a given value """
-        print self.max < a
-        #return False if (self.min > a or self.max < a) else (a in self.values)
-        #return a in self.values
+        """ Check if node contains a given value """   
+        return False if (self.min > a or self.max < a) else (a in self.values)
+
+    def chooseChild(self, a):
+        """ Choose where to go according to the value a """
+        if self.valcnt == 2:
+            if a < self.min:    return self.min.lessThan
+            if a > self.max:    return self.max.greaterThan
+            if a > self.min and a < self.max: return self.min.greaterThan
+        elif self.valcnt == 3:
+            pass
 
     @property
     def min(self):
@@ -88,13 +90,17 @@ class Node(object):
 
     @property
     def med(self):
-        if len(self.values) == 3:
-            return self.values[3]
+        if self.valcnt == 3:
+            return self.values[1]
         else: return None
 
     @property
     def max(self):
-        return self.values[len(self.values) - 1]
+        return self.values[self.valcnt - 1]
+
+    @property
+    def valcnt(self):
+        return len(self.__values)
 
     @property
     def values(self):
@@ -117,21 +123,24 @@ class Node(object):
 class TTTree(object):
 
     def __init__(self):
-        self.__root = Node()
+        self.__root = Node()        
+
+    def __find(self, curnode, a):
+        if curnode.contains(a): return curnode
+        # determine where to go further
+         
 
     def contains(self, a):
-        """ See if we have a given value in our tree """
-        
-        pass
+        """ See if we have a given value in our tree """ 
+        return self.__find(self.__root, a)
 
     def findNode(self, a):
         """ Find the node which contains the given value """
-
         pass
 
     def insertValue(self, a):
         """ Inserts a new value to tree and resolves conflicts if needed """
-         
+        
         pass
 
 n = Node()
@@ -139,7 +148,8 @@ n.insertValue(10)
 n.insertValue(5)
 n.insertValue(20)
 
-print n.contains(10)
+print n.med
+
 
 #t = TTTree()
 #t.addValue(12)
