@@ -19,6 +19,9 @@ class Value(object):
 
     # interface methods & properties
 
+    def resetLinks(self):
+        self.__lt = self.__gt = None
+
     @property
     def value(self):
         return self.__value
@@ -48,9 +51,16 @@ class Value(object):
 
 class Node(object):
 
-    def __init__(self):
+    def __init__(self, v = None):
         self.__values = []
         self.__parent = None
+        self.__refcnt = 0
+        if v != None:
+            if type(v) is list:
+                for item in v:
+                    self.insertValue(item)
+            else:
+                self.insertValue(v)
 
     def __str__(self):
         out = ''
@@ -62,19 +72,26 @@ class Node(object):
 
     def insertValue(self, val):
         if self.valcnt < 3:
-            self.__values.append(Value(val))
+            if type(val) is not Value:
+                self.__values.append(Value(val))
+            else:
+                self.__values.append(val)
             self.__sort3(self.__values)
 
+    def isConsistent(self):
+        """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
+        return not (self.valcnt > 2 or self.refcnt > 3)
+
     def addLink(self, ref):
-        # see where to insert this link
-        
-        pass 
+        """ See where to insert this link """
+        self.__refcnt += 1
 
     def setParent(self, obj):
         self.__parent = obj
 
     def contains(self, a):
-        """ Check if node contains a given value """   
+        """ Check if node contains a given value """
+        if self.valcnt == 0:  return False
         return False if (self.min > a or self.max < a) else (a in self.values)
 
     def chooseChild(self, a):
@@ -108,6 +125,10 @@ class Node(object):
         return len(self.__values)
 
     @property
+    def refcnt(self):
+        return self.__refcnt
+
+    @property
     def values(self):
         return self.__values
 
@@ -128,34 +149,62 @@ class Node(object):
 class TTTree(object):
 
     def __init__(self):
-        self.__root = Node()        
+        self.__root = Node()
 
-    def __find(self, curnode, a):
-        if curnode.contains(a): return curnode
+    def __str__(self):
+        """ String representation of a tree, this operation mb cpu consuming """
+        pass
+
+    def __find(self, curNode, a):
+        if curNode.contains(a): return curNode
         # determine where to go further
-        curnode.chooseChild(a)
+        nextNode = curNode.chooseChild(a)
+        if nextNode is None:
+            return curNode
+        self.__find(nextNode, a)
 
     def contains(self, a):
         """ See if we have a given value in our tree """ 
-        return self.__find(self.__root, a)
+        node = self.findNode(a)
+        return node if node.contains(a) else None
 
     def findNode(self, a):
         """ Find the node which contains the given value """
-        pass
+        return self.__find(self.__root, a)
 
     def insertValue(self, a):
         """ Inserts a new value to tree and resolves conflicts if needed """
+        node = self.findNode(a)
+        if node.contains(a): return None
+        # try to insert a new value into existing node
+        node.insertValue(a)
+        if not node.isConsistent():
+            # conflict detected, try to resolve it
+            if node is self.root:
+                # take the middle element of a root node and treat it as a new root node
+                node.min.resetLinks()
+                node.max.resetLinks()
+                node.med.resetLinks()
+                mid = node.med
+                mid.lessThan = Node(node.min)
+                mid.greaterThan = Node(node.max)
+                self.__root = Node(mid)
+            else:
+                # take the middle element of a node and propogate it one level up
+                # recursively repeat this procedure until there will be no conflicts
+                mid = node.med
+                
+
+        return node
         
-        pass
+    @property
+    def root(self):
+        return self.__root
 
-n = Node()
-n.insertValue(10)
-n.insertValue(5)
-n.insertValue(20)
+t = TTTree()
+t.insertValue(12)
+t.insertValue(20)
+t.insertValue(15)
+print t.root.min.greaterThan
 
-print n.med
-
-
-#t = TTTree()
-#t.addValue(12)
 
