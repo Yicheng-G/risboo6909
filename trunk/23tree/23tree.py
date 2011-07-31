@@ -33,10 +33,12 @@ class Value(object):
 
     @lessThan.setter
     def lessThan(self, ref):
+        """ Link to the element less than self """
         self.__lt = ref
 
     @property
     def greaterThan(self):
+        """ Link to the element greater than self """
         return self.__gt
 
     @greaterThan.setter
@@ -82,7 +84,10 @@ class Node(object):
             if a > self.max:    return self.max.greaterThan
             if a > self.min and a < self.max: return self.min.greaterThan
         elif self.valcnt == 3:
-            pass
+            if a < self.min:    return self.min.lessThan
+            if a > self.max:    return self.max.greaterThan
+            if a > self.min and a < self.med:   return self.med.lessThan
+            if a > self.med and a < self.max:   return self.med.greaterThan
 
     @property
     def min(self):
@@ -128,7 +133,7 @@ class TTTree(object):
     def __find(self, curnode, a):
         if curnode.contains(a): return curnode
         # determine where to go further
-         
+        curnode.chooseChild(a)
 
     def contains(self, a):
         """ See if we have a given value in our tree """ 
