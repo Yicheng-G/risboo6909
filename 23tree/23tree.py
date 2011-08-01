@@ -78,6 +78,11 @@ class Node(object):
                 self.__values.append(val)
             self.__sort3(self.__values)
 
+    def removeValue(self, val):
+        """ Remove value from the node """
+        if not self.contains(val): return None
+        del self.__values[self.values.index(val)]
+
     def isConsistent(self):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
         return not (self.valcnt > 2 or self.refcnt > 3)
@@ -150,7 +155,7 @@ class Node(object):
 class TTTree(object):
 
     def __init__(self):
-        self.__root = Node()
+        self.root = Node()
         self.parent = None
 
     def __str__(self):
@@ -172,7 +177,7 @@ class TTTree(object):
 
     def findNode(self, a):
         """ Find the node which contains the given value """
-        return self.__find(self.__root, a)
+        return self.__find(self.root, a)
 
     def insertValue(self, a):
         """ Inserts a new value to tree and resolves conflicts if needed """
@@ -190,13 +195,13 @@ class TTTree(object):
                 mid = node.med
                 mid.lessThan = Node(node.min)
                 mid.greaterThan = Node(node.max)
-                self.__root = Node(mid)
+                self.root = Node(mid)
             else:
                 # take the middle element of a node and propogate it one level up
                 # recursively repeat this procedure until there will be no conflicts
-                node.med.resetLinks()
-                mid = node.med 
-                
+                mid = node.med                
+                parent.insertValue(mid)
+                node.removeValue(mid)
 
         return node
         
