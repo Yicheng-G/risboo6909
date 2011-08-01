@@ -86,9 +86,6 @@ class Node(object):
         """ See where to insert this link """
         self.__refcnt += 1
 
-    def setParent(self, obj):
-        self.__parent = obj
-
     def contains(self, a):
         """ Check if node contains a given value """
         if self.valcnt == 0:  return False
@@ -136,6 +133,10 @@ class Node(object):
     def parent(self):
         return self.__parent
 
+    @parent.setter
+    def parent(self, ref):
+        self.__parent = ref
+
     # private methods
 
     def __sort3(self, arr):
@@ -150,6 +151,7 @@ class TTTree(object):
 
     def __init__(self):
         self.__root = Node()
+        self.parent = None
 
     def __str__(self):
         """ String representation of a tree, this operation mb cpu consuming """
@@ -192,7 +194,8 @@ class TTTree(object):
             else:
                 # take the middle element of a node and propogate it one level up
                 # recursively repeat this procedure until there will be no conflicts
-                mid = node.med
+                node.med.resetLinks()
+                mid = node.med 
                 
 
         return node
@@ -200,6 +203,11 @@ class TTTree(object):
     @property
     def root(self):
         return self.__root
+
+    @root.setter
+    def root(self, ref):
+        self.__root = ref
+
 
 t = TTTree()
 t.insertValue(12)
