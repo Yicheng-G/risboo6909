@@ -51,10 +51,9 @@ class Value(object):
 
 class Node(object):
 
-    def __init__(self, v = None):
+    def __init__(self, v = None, parent = None):
         self.__values = []
-        self.__parent = None
-        self.__refcnt = 0
+        self.__parent = parent
         if v != None:
             if type(v) is list:
                 for item in v:
@@ -83,13 +82,24 @@ class Node(object):
         if not self.contains(val): return None
         del self.__values[self.values.index(val)]
 
+    def removeLink(self, node):
+        """ Remove link from self to node """
+        for ref in self.values:
+            if self.lessThan == node: self.lessThan = None
+            if self.greaterThan == node: self.greaterThan = None
+
     def isConsistent(self):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
         return not (self.valcnt > 2 or self.refcnt > 3)
 
-    def addLink(self, ref):
-        """ See where to insert this link """
-        self.__refcnt += 1
+    def isLeafNode(self):
+        """ Check whether this is a leaf node or not """
+        return self.refcnt == 0
+
+    def addLink(self, nodeRef):
+        """ Add a link to another node """
+        if self.chooseChild(nodeRef):
+            self.chooseChild(nodeRef) = nodeRef
 
     def contains(self, a):
         """ Check if node contains a given value """
@@ -98,7 +108,10 @@ class Node(object):
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
-        if self.valcnt == 2:
+        if self.valcnt == 1:
+            if a < self.min:    return self.min.lessThan
+            if a > self.max:    return self.max.greaterThan
+        elif self.valcnt == 2:
             if a < self.min:    return self.min.lessThan
             if a > self.max:    return self.max.greaterThan
             if a > self.min and a < self.max: return self.min.greaterThan
@@ -107,6 +120,7 @@ class Node(object):
             if a > self.max:    return self.max.greaterThan
             if a > self.min and a < self.med:   return self.med.lessThan
             if a > self.med and a < self.max:   return self.med.greaterThan
+        return None
 
     @property
     def min(self):
@@ -128,7 +142,14 @@ class Node(object):
 
     @property
     def refcnt(self):
-        return self.__refcnt
+        tmp = set()
+        for val in self.values:
+            tmp.add(val.lessThan)
+            tmp.add(val.greaterThan)
+        if len(tmp) == 1 and tmp[0] == None:
+            # one 'None' link means that there are no links at all
+            return 0
+        return len(tmp)
 
     @property
     def values(self):
@@ -170,6 +191,51 @@ class TTTree(object):
             return curNode
         self.__find(nextNode, a)
 
+    def __fixNode(self, node):
+        if not node.isConsistent():
+            # conflict detected, try to resolve it
+            if node is self.root:
+                # take the middle element of a root node and treat it as a new root node
+                node.min.resetLinks()
+                node.max.resetLinks()
+                node.med.resetLinks()
+                mid = node.med
+                self.root = Node(mid)
+                mid.lessThan = Node(node.min, self.root)
+                mid.greaterThan = Node(node.max, self.root)
+            elif node.isLeafNode():
+                # case for leaf node
+                mid = node.med
+                # create two separate nodes
+                leftNode = Node(node.min)
+                rightNode = Node(node.max)
+
+                node.parent.removeLink(self)
+                node.parent.insertValue(mid)
+                node.parent.addLink(leftNode)
+                node.parent.addLink(rightNode)
+
+                self.__fixNode(parent)
+            else:
+                # case for internal node (the hardest one)
+                mid = node.med
+
+                leftNode = Node(node.min)
+                rightNode = Node(node.max)
+
+                node.parent.removeLink(self)
+                
+                leftNode.addLink(mid.lessThan)
+                rightNode.addLink(mid.greaterThan)
+
+                node.parent.addLink(leftNode)
+                node.parent.addLink(rightNode)
+
+                self.__fixNode(parent)
+ 
+
+        else: return
+
     def contains(self, a):
         """ See if we have a given value in our tree """ 
         node = self.findNode(a)
@@ -185,23 +251,7 @@ class TTTree(object):
         if node.contains(a): return None
         # try to insert a new value into existing node
         node.insertValue(a)
-        if not node.isConsistent():
-            # conflict detected, try to resolve it
-            if node is self.root:
-                # take the middle element of a root node and treat it as a new root node
-                node.min.resetLinks()
-                node.max.resetLinks()
-                node.med.resetLinks()
-                mid = node.med
-                mid.lessThan = Node(node.min)
-                mid.greaterThan = Node(node.max)
-                self.root = Node(mid)
-            else:
-                # take the middle element of a node and propogate it one level up
-                # recursively repeat this procedure until there will be no conflicts
-                mid = node.med                
-                parent.insertValue(mid)
-                node.removeValue(mid)
+        self.__fixNode(node)
 
         return node
         
