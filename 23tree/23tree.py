@@ -85,6 +85,7 @@ class Node(object):
             if a > self.med and a < self.max:   return self.values[1], self.RIGHT
         return None, None
 
+
     # interface methods & properties
 
     def insertValue(self, val):
@@ -115,6 +116,26 @@ class Node(object):
     def isLeafNode(self):
         """ Check whether this is a leaf node or not """
         return self.refcnt == 0
+
+    def getLinkByNo(self, n):
+        """ Return node's n-th link (going from smallest to biggest) """
+        if self.valcnt == 1:
+            return self.min.lessThan if n == 0 else self.max.greaterThan
+        if self.valcnt == 2:
+            if n == 0: return self.min.lessThan
+            if n == 1: return self.min.greaterThan
+            if n == 2: return self.max.greaterThan
+        if self.valcnt == 3:        
+            if n == 0: return self.min.lessThan
+            if n == 1: return self.med.lessThan
+            if n == 2: return self.med.greaterThan
+            if n == 3: return self.max.greaterThan
+
+    def getLinksList(self):
+        refs = [None] * 4
+        for j in xrange(self.refcnt):
+            refs[j] = self.getLinkByNo(j)
+        return refs
 
     def addLink(self, nodeRef):
         """ Add link to another node """
@@ -210,18 +231,20 @@ class TTTree(object):
             # conflict detected, try to resolve it
             if node is self.root:
                 # take the middle element of a root node and treat it as a new root node
+                links = self.root.getLinksList()
+               
                 self.root = Node(node.med.value)
                 leftNode = Node(node.min.value, self.root)
                 rightNode = Node(node.max.value, self.root)
                 self.root.addLink(leftNode)
                 self.root.addLink(rightNode)
 
-                leftNode.addLink(node.med.lessThan)
-                rightNode.addLink(node.med.greaterThan)
+                leftNode.addLink(links[0])
+                leftNode.addLink(links[1])
+                rightNode.addLink(links[2])
+                rightNode.addLink(links[3])
             elif node.isLeafNode():
                 # case for leaf node
-                print node.min.value, node.med.value, node.max.value
-                print node.parent
                 node.parent.insertValue(node.med.value)
                 leftNode = Node(node.min.value, node.parent)
                 rightNode = Node(node.max.value, node.parent)
@@ -288,6 +311,6 @@ t.insertValue(30)
 
 t.insertValue(26)
 
-print t.root.max.greaterThan.min.greaterThan
+print '*', t.root.max.greaterThan.max.lessThan
 
 
