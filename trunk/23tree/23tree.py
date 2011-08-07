@@ -85,7 +85,6 @@ class Node(object):
             if a > self.med and a < self.max:   return self.values[1], self.RIGHT
         return None, None
 
-
     def __rearrangeLinks(self):
         refs = [0] * 4
         refidx = 0
@@ -155,14 +154,20 @@ class Node(object):
         return refs
 
 
+    def getLinkIdx(self, destNode):
+        for j in xrange(self.refcnt):
+            if refs[j] == destNode: return j
+        return -1
+
     def addLink(self, nodeRef):
         """ Add link to another node """
-        if nodeRef is None: return
+        if nodeRef is None: return self
         ref, side = self.__getlink(nodeRef.min)
         if ref != None:
             if side == self.LEFT: ref.lessThan = nodeRef
             else: ref.greaterThan = nodeRef
             nodeRef.parent = self
+        return self
 
     def contains(self, a):
         """ Check if node contains a given value """
@@ -244,7 +249,25 @@ class TTTree(object):
             return curNode
         return self.__find(nextNode, a)
 
+    def __getLeftSibling(self, node):
+        """ Returns left sibling of a node """
+        if node.parent is not None:
+            refidx = node.parent.getLinkIdx(node)
+            if refidx != -1 and refidx != 0:
+                return node.parent.getLinksList()[refidx - 1]
+        return None
+    
+    def __getRightSibling(self, node):
+        """ Returns right sibling of a node """
+        if node.parent is not None:
+            refidx = node.parent.getLinkIdx(node)
+            tmp = node.parent.getLinksList()
+            if refidx != -1 and refidx + 1 < len(tmp):
+                return node.parent.getLinksList()[refidx + 1]
+        return None
+
     def __fixNodeRemove(self, node):
+        
         pass
 
     def __fixNodeInsert(self, node):
@@ -253,14 +276,13 @@ class TTTree(object):
             if node.isLeafNode() and node is not self.root:
                 # case for leaf node
                 node.parent.insertValue(node.med.value)
-                leftNode = Node(node.min.value, node.parent)
-                rightNode = Node(node.max.value, node.parent)             
                 node.parent.removeLink(node)
-                node.parent.addLink(leftNode)
-                node.parent.addLink(rightNode)
+                # split the node
+                node.parent.addLink(Node(node.min.value, node.parent))
+                node.parent.addLink(Node(node.max.value, node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
-                # case for internal node (the hardest one)
+                # case for internal node or root node
                 links = node.getLinksList()
                 
                 if node is not self.root:
@@ -270,15 +292,14 @@ class TTTree(object):
                 else:
                     self.root = Node(node.med.value)
                     parent = self.root
-                    
+
+                # split the node         
                 leftNode = Node(node.min.value, parent)
                 rightNode = Node(node.max.value, parent)
-                parent.addLink(leftNode)
-                parent.addLink(rightNode)
-                leftNode.addLink(links[0])
-                leftNode.addLink(links[1])
-                rightNode.addLink(links[2])
-                rightNode.addLink(links[3])
+
+                parent.addLink(leftNode).addLink(rightNode)
+                leftNode.addLink(links[0]).addLink(links[1])
+                rightNode.addLink(links[2]).addLink(links[3])
 
                 if node is not self.root:
                     self.__fixNodeInsert(parent)
