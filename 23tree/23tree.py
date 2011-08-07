@@ -86,6 +86,22 @@ class Node(object):
         return None, None
 
 
+    def __rearrangeLinks(self):
+        refs = [0] * 4
+        refidx = 0
+        for j in xrange(self.valcnt):
+            if self.__values[j].lessThan is not None:
+                refs[refidx] = self.__values[j].lessThan
+                self.__values[j].lessThan = None
+                refidx += 1         
+            if self.__values[j].greaterThan is not None:
+                refs[refidx] = self.__values[j].greaterThan
+                self.__values[j].greaterThan = None
+                refidx += 1
+        for j in xrange(refidx):
+            self.addLink(refs[j])
+        
+
     # interface methods & properties
 
     def insertValue(self, val):
@@ -95,6 +111,7 @@ class Node(object):
             else:
                 self.__values.append(val)
             self.__sort3(self.__values)
+            self.__rearrangeLinks()
 
     def removeValue(self, val):
         """ Remove value from the node """
@@ -120,7 +137,7 @@ class Node(object):
     def getLinkByNo(self, n):
         """ Return node's n-th link (going from smallest to biggest) """
         if self.valcnt == 1:
-            return self.min.lessThan if n == 0 else self.max.greaterThan
+            return self.min.lessThan if n == 0 else self.min.greaterThan
         if self.valcnt == 2:
             if n == 0: return self.min.lessThan
             if n == 1: return self.min.greaterThan
@@ -136,6 +153,7 @@ class Node(object):
         for j in xrange(self.refcnt):
             refs[j] = self.getLinkByNo(j)
         return refs
+
 
     def addLink(self, nodeRef):
         """ Add link to another node """
@@ -226,49 +244,44 @@ class TTTree(object):
             return curNode
         return self.__find(nextNode, a)
 
-    def __fixNode(self, node):
+    def __fixNodeRemove(self, node):
+        pass
+
+    def __fixNodeInsert(self, node):
         if not node.isConsistent():
             # conflict detected, try to resolve it
-            if node is self.root:
-                # take the middle element of a root node and treat it as a new root node
-                links = self.root.getLinksList()
-               
-                self.root = Node(node.med.value)
-                leftNode = Node(node.min.value, self.root)
-                rightNode = Node(node.max.value, self.root)
-                self.root.addLink(leftNode)
-                self.root.addLink(rightNode)
-
+            if node.isLeafNode() and node is not self.root:
+                # case for leaf node
+                node.parent.insertValue(node.med.value)
+                leftNode = Node(node.min.value, node.parent)
+                rightNode = Node(node.max.value, node.parent)             
+                node.parent.removeLink(node)
+                node.parent.addLink(leftNode)
+                node.parent.addLink(rightNode)
+                self.__fixNodeInsert(node.parent)
+            else:
+                # case for internal node (the hardest one)
+                links = node.getLinksList()
+                
+                if node is not self.root:
+                    node.parent.insertValue(node.med.value)
+                    node.parent.removeLink(node)
+                    parent = node.parent
+                else:
+                    self.root = Node(node.med.value)
+                    parent = self.root
+                    
+                leftNode = Node(node.min.value, parent)
+                rightNode = Node(node.max.value, parent)
+                parent.addLink(leftNode)
+                parent.addLink(rightNode)
                 leftNode.addLink(links[0])
                 leftNode.addLink(links[1])
                 rightNode.addLink(links[2])
                 rightNode.addLink(links[3])
-            elif node.isLeafNode():
-                # case for leaf node
-                node.parent.insertValue(node.med.value)
-                leftNode = Node(node.min.value, node.parent)
-                rightNode = Node(node.max.value, node.parent)
-                node.parent.removeLink(node)
-                node.parent.addLink(leftNode)
-                node.parent.addLink(rightNode)
-                self.__fixNode(node.parent)
-            else:
-                # case for internal node (the hardest one)
-                mid = node.med
 
-                leftNode = Node(node.min.value, node.parent)
-                rightNode = Node(node.max.value, node.parent)
-
-                node.parent.removeLink(node)
-                
-                leftNode.addLink(mid.lessThan)
-                rightNode.addLink(mid.greaterThan)
-
-                node.parent.addLink(leftNode)
-                node.parent.addLink(rightNode)
-
-                self.__fixNode(node.parent)
- 
+                if node is not self.root:
+                    self.__fixNodeInsert(parent)
 
         else: return
 
@@ -282,14 +295,21 @@ class TTTree(object):
         return self.__find(self.root, a)
 
     def insertValue(self, a):
-        """ Inserts a new value to tree and resolves conflicts if needed """
+        """ Inserts a new value to tree and keeps it balanced """
         node = self.findNode(a)
-        if node.contains(a): 
+        if node.contains(a):
             return None
         # try to insert a new value into existing node
         node.insertValue(a)
-        self.__fixNode(node)
+        self.__fixNodeInsert(node)
         return node
+
+    def removeValue(self, a):
+        """ Removes a value from the tree and keeps it balanced """
+        node = self.findNode(a)
+        if not node.contains(a):
+            return None
+        
         
     @property
     def root(self):
@@ -308,9 +328,14 @@ t.insertValue(15)
 t.insertValue(25)
 t.insertValue(27)
 t.insertValue(30)
-
 t.insertValue(26)
+t.insertValue(35)
+t.insertValue(38)
+t.insertValue(40)
 
-print '*', t.root.max.greaterThan.max.lessThan
+t.insertValue(50)
+
+print t.root.getLinksList()[2].getLinksList()[1]
+#print t.root.max.greaterThan.getLinksList()[1]
 
 
