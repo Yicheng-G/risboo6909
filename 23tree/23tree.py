@@ -153,7 +153,6 @@ class Node(object):
             refs[j] = self.getLinkByNo(j)
         return refs
 
-
     def getLinkIdx(self, destNode):
         for j in xrange(self.refcnt):
             if refs[j] == destNode: return j
@@ -194,6 +193,22 @@ class Node(object):
     @property
     def max(self):
         return self.values[self.valcnt - 1]
+
+    @property
+    def minLink(self):
+        return self.getLinksList()[0]
+
+    @property
+    def medLink(self):
+        return self.getLinksList()[1]
+
+    @property
+    def medLink2(self):
+        return self.getLinksList()[2]
+
+    @property
+    def maxLink(self):
+        return self.getLinksList()[3]
 
     @property
     def valcnt(self):
@@ -266,6 +281,17 @@ class TTTree(object):
                 return node.parent.getLinksList()[refidx + 1]
         return None
 
+    def __nextSucc(self, node):
+        if not node.isLeafNode():
+            return self.__nextSucc(node.minLink)
+        return node
+
+    def __findInorderSucc(self, node, a):
+        if node.isLeafNode():
+            return node
+        new_node = node.chooseChild(a + 1)
+        return self.__nextSucc(new_node)
+
     def __fixNodeRemove(self, node):
         
         pass
@@ -330,6 +356,7 @@ class TTTree(object):
         node = self.findNode(a)
         if not node.contains(a):
             return None
+        succ = (self.__findInorderSucc(node, a)).min
         
         
     @property
@@ -356,7 +383,10 @@ t.insertValue(40)
 
 t.insertValue(50)
 
+# ---------------
+
+t.removeValue(15)
+
 print t.root.getLinksList()[2].getLinksList()[1]
 #print t.root.max.greaterThan.getLinksList()[1]
-
 
