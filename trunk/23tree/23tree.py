@@ -129,6 +129,10 @@ class Node(object):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
         return not (self.valcnt > 2 or self.refcnt > 3)
 
+    def getNodeItem(self, a):
+        if not self.contains(a): return None
+        return self.values[self.values.index(a)]       
+
     def isLeafNode(self):
         """ Check whether this is a leaf node or not """
         return self.refcnt == 0
@@ -292,9 +296,21 @@ class TTTree(object):
         new_node = node.chooseChild(a + 1)
         return self.__nextSucc(new_node)
 
+    def __swapValues(self, node1, a1, node2, a2):
+        """ Swap any two values in nodes """
+        item1 = node1.getNodeItem(a1)
+        item2 = node2.getNodeItem(a2)
+        item1.value, item2.value = item2.value, item1.value
+
     def __fixNodeRemove(self, node):
-        
-        pass
+        if node.valcnt == 0:
+            if node is self.root:
+                # remove the root, set new root pointer
+                pass
+            else:
+                # check whether one of our siblings has two items
+#                if self.__getLeftSibling(node).valcnt == 2:
+                pass
 
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
@@ -356,8 +372,15 @@ class TTTree(object):
         node = self.findNode(a)
         if not node.contains(a):
             return None
-        succ = (self.__findInorderSucc(node, a)).min
-        
+        succ = node
+        if not node.isLeafNode():
+            # swap the value we want to delete with its inorder successor (always leaf)
+            succ = self.__findInorderSucc(node, a)
+            self.__swapValues(node, a, succ, succ.min)
+        # delete leaf node value
+        succ.removeValue(a)
+        # fix tree if needed
+        self.__fixNodeRemove(succ)
         
     @property
     def root(self):
