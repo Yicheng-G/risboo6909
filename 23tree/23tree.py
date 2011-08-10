@@ -1,61 +1,8 @@
-class Value(object):
-
-    def __init__(self, value, lt = None, gt = None):
-        self.__value = value
-        self.__gt = lt
-        self.__lt = gt
-
-    def __str__(self):
-        return '%s' % self.value
-
-    def __eq__(self, other):
-        return self.value == other.value if isinstance(other, Value) else other == self.value
-
-    def __gt__(self, other):
-        return self.value > other.value if isinstance(other, Value) else self.value > other
-
-    def __lt__(self, other):
-        return self.value < other.value if isinstance(other, Value) else self.value < other
-
-    # interface methods & properties
-
-    def resetLinks(self):
-        self.__lt = self.__gt = None
-
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, a):
-        self.__value = a
-
-    @property
-    def lessThan(self):
-        return self.__lt
-
-    @lessThan.setter
-    def lessThan(self, ref):
-        """ Link to the element less than self """
-        self.__lt = ref
-
-    @property
-    def greaterThan(self):
-        """ Link to the element greater than self """
-        return self.__gt
-
-    @greaterThan.setter
-    def greaterThan(self, ref):
-        self.__gt = ref
-
-
 class Node(object):
-
-    LEFT = 0
-    RIGHT = 1
 
     def __init__(self, v = None, parent = None):
         self.__values = []
+        self.__links = [None] * 4
         self.__parent = parent
         if v != None:
             if type(v) is list:
@@ -70,60 +17,50 @@ class Node(object):
             out += (str(v) + ' ')
         return out
 
-    def __getlink(self, a):
+    def __getlink(self, a):        
         if self.valcnt == 1:
-            if a < self.min:    return self.values[0], self.LEFT
-            if a > self.max:    return self.values[0], self.RIGHT
+            if a < self.min:    return 0
+            if a > self.max:    return 1
         elif self.valcnt == 2:
-            if a < self.min:    return self.values[0], self.LEFT
-            if a > self.max:    return self.values[1], self.RIGHT
-            if a > self.min and a < self.max: return self.values[0], self.RIGHT
+            if a < self.min:    return 0
+            if a > self.max:    return 2
+            if self.min < a < self.max: return 1
         elif self.valcnt == 3:
-            if a < self.min:    return self.values[0], self.LEFT
-            if a > self.max:    return self.values[2], self.RIGHT
-            if a > self.min and a < self.med:   return self.values[1], self.LEFT
-            if a > self.med and a < self.max:   return self.values[1], self.RIGHT
-        return None, None
+            if a < self.min:    return 0
+            if a > self.max:    return 3
+            if self.min < a < self.med:   return 1
+            if self.med < a < self.max:   return 2
+        return -1
 
-    def __rearrangeLinks(self):
-        refs = [0] * 4
-        refidx = 0
-        for j in xrange(self.valcnt):
-            if self.__values[j].lessThan is not None:
-                refs[refidx] = self.__values[j].lessThan
-                self.__values[j].lessThan = None
-                refidx += 1         
-            if self.__values[j].greaterThan is not None:
-                refs[refidx] = self.__values[j].greaterThan
-                self.__values[j].greaterThan = None
-                refidx += 1
-        for j in xrange(refidx):
-            self.addLink(refs[j])
-        
+    def __rearrangeLinks(self, newVal):
+        if self.valcnt != 0:
+            if newVal < self.min:
+                self.__links = [None] + self.__links[:3]
+            elif self.valcnt == 2 and self.max > newVal > self.min:
+                self.__links[3] = self.__links[2]
+                self.__links[2] = self.__links[1]
+                self.__links[1] = None
+
 
     # interface methods & properties
 
-    def insertValue(self, val):
+    def insertValue(self, newVal):
         if self.valcnt < 3:
-            if type(val) is not Value:
-                self.__values.append(Value(val))
-            else:
-                self.__values.append(val)
-            self.__sort3(self.__values)
-            self.__rearrangeLinks()
+            self.__rearrangeLinks(newVal)            
+            self.values.append(newVal)
+            self.__sort3(self.values)
 
     def removeValue(self, val):
         """ Remove value from the node """
         if not self.contains(val): return None
-        del self.__values[self.values.index(val)]
+        del self.values[self.values.index(val)]
 
     def removeLink(self, node):
-        """ Remove link from self to node """
-        for ref in self.values:
-            if ref.lessThan == node: 
-                ref.lessThan = None
-            if ref.greaterThan == node:
-                ref.greaterThan = None
+        """ Remove link from self to another node """
+        for idx in xrange(self.refcnt):
+            if self.links[idx] == node:
+                self.links[idx] = None
+                break
 
     def isConsistent(self):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
@@ -139,37 +76,19 @@ class Node(object):
 
     def getLinkByNo(self, n):
         """ Return node's n-th link (going from smallest to biggest) """
-        if self.valcnt == 1:
-            return self.min.lessThan if n == 0 else self.min.greaterThan
-        if self.valcnt == 2:
-            if n == 0: return self.min.lessThan
-            if n == 1: return self.min.greaterThan
-            if n == 2: return self.max.greaterThan
-        if self.valcnt == 3:        
-            if n == 0: return self.min.lessThan
-            if n == 1: return self.med.lessThan
-            if n == 2: return self.med.greaterThan
-            if n == 3: return self.max.greaterThan
-
-    def getLinksList(self):
-        refs = [None] * 4
-        for j in xrange(self.refcnt):
-            refs[j] = self.getLinkByNo(j)
-        return refs
+        return self.links[n]
 
     def getLinkIdx(self, destNode):
         for j in xrange(self.refcnt):
             if refs[j] == destNode: return j
         return -1
 
-    def addLink(self, nodeRef):
+    def addLink(self, anotherNode):
         """ Add link to another node """
-        if nodeRef is None: return self
-        ref, side = self.__getlink(nodeRef.min)
-        if ref != None:
-            if side == self.LEFT: ref.lessThan = nodeRef
-            else: ref.greaterThan = nodeRef
-            nodeRef.parent = self
+        if anotherNode is not None:
+            idx = self.__getlink(anotherNode.min)
+            if idx != -1:
+                 self.links[idx] = anotherNode
         return self
 
     def contains(self, a):
@@ -179,10 +98,9 @@ class Node(object):
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
-        ref, side = self.__getlink(a)
-        if ref != None:
-            if side == self.LEFT: return ref.lessThan
-            else: return ref.greaterThan
+        idx = self.__getlink(a)
+        if idx != -1: return self.links[idx]
+        return None
 
     @property
     def min(self):
@@ -200,19 +118,7 @@ class Node(object):
 
     @property
     def minLink(self):
-        return self.getLinksList()[0]
-
-    @property
-    def medLink(self):
-        return self.getLinksList()[1]
-
-    @property
-    def medLink2(self):
-        return self.getLinksList()[2]
-
-    @property
-    def maxLink(self):
-        return self.getLinksList()[3]
+        return self.links[0]
 
     @property
     def valcnt(self):
@@ -220,17 +126,18 @@ class Node(object):
 
     @property
     def refcnt(self):
-        tmp = set()
-        for val in self.values:
-            if val.lessThan != None:
-                tmp.add(val.lessThan)
-            if val.greaterThan != None:
-                tmp.add(val.greaterThan)
-        return len(tmp)
+        net = 0
+        for idx in xrange(len(self.__links)):
+            if self.__links[idx] is not None: net += 1
+        return net
 
     @property
     def values(self):
         return self.__values
+
+    @property
+    def links(self):
+        return self.__links
 
     @property
     def parent(self):
@@ -244,10 +151,10 @@ class Node(object):
 
     def __sort3(self, arr):
         if len(arr) >= 2:
-            if arr[0].value > arr[1].value: arr[0].value, arr[1].value = arr[1].value, arr[0].value
+            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
         if len(arr) == 3:
-            if arr[1].value > arr[2].value: arr[1].value, arr[2].value = arr[2].value, arr[1].value
-            if arr[0].value > arr[1].value: arr[0].value, arr[1].value = arr[1].value, arr[0].value
+            if arr[1] > arr[2]: arr[1], arr[2] = arr[2], arr[1]
+            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
 
 
 class TTTree(object):
@@ -257,7 +164,7 @@ class TTTree(object):
         self.parent = None
 
     def __str__(self):
-        """ String representation of a tree, this operation mb cpu consuming """
+        """ String representation of a tree """
         pass
 
     def __find(self, curNode, a):
@@ -273,16 +180,16 @@ class TTTree(object):
         if node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
             if refidx != -1 and refidx != 0:
-                return node.parent.getLinksList()[refidx - 1]
+                return node.parent.links[refidx - 1]
         return None
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
         if node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
-            tmp = node.parent.getLinksList()
+            tmp = node.parent.links
             if refidx != -1 and refidx + 1 < len(tmp):
-                return node.parent.getLinksList()[refidx + 1]
+                return node.parent.links[refidx + 1]
         return None
 
     def __nextSucc(self, node):
@@ -313,33 +220,41 @@ class TTTree(object):
                 pass
 
     def __fixNodeInsert(self, node):
+        print 'cons:', node, node.isConsistent()
         if not node.isConsistent():
             # conflict detected, try to resolve it
             if node.isLeafNode() and node is not self.root:
+                
+    #            print node.min, node.med, node.max
                 # case for leaf node
-                node.parent.insertValue(node.med.value)
+    #            print 'parent for %s: %s %s' % (node, node.parent, node.parent.parent)
+    #            print self.root.links[1]
+    #            print '----'
+                node.parent.insertValue(node.med)
                 node.parent.removeLink(node)
                 # split the node
-                node.parent.addLink(Node(node.min.value, node.parent))
-                node.parent.addLink(Node(node.max.value, node.parent))
+                node.parent.addLink(Node(node.min, node.parent))
+                node.parent.addLink(Node(node.max, node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
                 # case for internal node or root node
-                links = node.getLinksList()
+                links = node.links
                 
                 if node is not self.root:
-                    node.parent.insertValue(node.med.value)
+                    node.parent.insertValue(node.med)
                     node.parent.removeLink(node)
                     parent = node.parent
-                else:
-                    self.root = Node(node.med.value)
+                else:                    
+                    self.root = Node(node.med)
                     parent = self.root
+                    print 'root work'
 
                 # split the node         
-                leftNode = Node(node.min.value, parent)
-                rightNode = Node(node.max.value, parent)
+                leftNode = Node(node.min, parent)
+                rightNode = Node(node.max, parent)
 
                 parent.addLink(leftNode).addLink(rightNode)
+                print links[0], links[1], links[2], links[3]
                 leftNode.addLink(links[0]).addLink(links[1])
                 rightNode.addLink(links[2]).addLink(links[3])
 
@@ -363,9 +278,10 @@ class TTTree(object):
         if node.contains(a):
             return None
         # try to insert a new value into existing node
+        print 'inserting %d' % a
         node.insertValue(a)
         self.__fixNodeInsert(node)
-        return node
+        return self
 
     def removeValue(self, a):
         """ Removes a value from the tree and keeps it balanced """
@@ -399,9 +315,21 @@ t.insertValue(15)
 t.insertValue(25)
 t.insertValue(27)
 t.insertValue(30)
+
 t.insertValue(26)
+
+
+
 t.insertValue(35)
+
+
+
+
 t.insertValue(38)
+
+
+print t.root.links[1].links[1]
+
 t.insertValue(40)
 
 t.insertValue(50)
@@ -411,5 +339,4 @@ t.insertValue(50)
 t.removeValue(15)
 
 print t.root.getLinksList()[2].getLinksList()[1]
-#print t.root.max.greaterThan.getLinksList()[1]
 
