@@ -17,7 +17,7 @@ class Node(object):
             out += (str(v) + ' ')
         return out
 
-    def __getlink(self, a):        
+    def __getlink(self, a): 
         if self.valcnt == 1:
             if a < self.min:    return 0
             if a > self.max:    return 1
@@ -33,13 +33,24 @@ class Node(object):
         return -1
 
     def __rearrangeLinks(self, newVal):
-        if self.valcnt != 0:
+        # rearrange links when adding a new node
+        if self.valcnt != 0:            
             if newVal < self.min:
+                # shift all the links to the right when adding new min element
                 self.__links = [None] + self.__links[:3]
             elif self.valcnt == 2 and self.max > newVal > self.min:
+                # rearrange middle links when adding med element
                 self.__links[3] = self.__links[2]
                 self.__links[2] = self.__links[1]
                 self.__links[1] = None
+
+
+    def __sort3(self, arr):
+        if len(arr) >= 2:
+            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
+        if len(arr) == 3:
+            if arr[1] > arr[2]: arr[1], arr[2] = arr[2], arr[1]
+            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
 
 
     # interface methods & properties
@@ -66,19 +77,12 @@ class Node(object):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
         return not (self.valcnt > 2 or self.refcnt > 3)
 
-    def getNodeItem(self, a):
-        if not self.contains(a): return None
-        return self.values[self.values.index(a)]       
-
     def isLeafNode(self):
         """ Check whether this is a leaf node or not """
         return self.refcnt == 0
 
-    def getLinkByNo(self, n):
-        """ Return node's n-th link (going from smallest to biggest) """
-        return self.links[n]
-
     def getLinkIdx(self, destNode):
+        """ Get index of the link which points to the given node """
         for j in xrange(self.refcnt):
             if refs[j] == destNode: return j
         return -1
@@ -88,7 +92,8 @@ class Node(object):
         if anotherNode is not None:
             idx = self.__getlink(anotherNode.min)
             if idx != -1:
-                 self.links[idx] = anotherNode
+                self.links[idx] = anotherNode
+                anotherNode.parent = self                
         return self
 
     def contains(self, a):
@@ -122,13 +127,13 @@ class Node(object):
 
     @property
     def valcnt(self):
-        return len(self.__values)
+        return len(self.values)
 
     @property
     def refcnt(self):
         net = 0
-        for idx in xrange(len(self.__links)):
-            if self.__links[idx] is not None: net += 1
+        for idx in xrange(len(self.links)):
+            if self.links[idx] is not None: net += 1
         return net
 
     @property
@@ -147,21 +152,12 @@ class Node(object):
     def parent(self, ref):
         self.__parent = ref
 
-    # private methods
-
-    def __sort3(self, arr):
-        if len(arr) >= 2:
-            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
-        if len(arr) == 3:
-            if arr[1] > arr[2]: arr[1], arr[2] = arr[2], arr[1]
-            if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
 
 
 class TTTree(object):
 
     def __init__(self):
-        self.root = Node()
-        self.parent = None
+        self.__root = Node()
 
     def __str__(self):
         """ String representation of a tree """
@@ -205,10 +201,9 @@ class TTTree(object):
 
     def __swapValues(self, node1, a1, node2, a2):
         """ Swap any two values in nodes """
-        item1 = node1.getNodeItem(a1)
-        item2 = node2.getNodeItem(a2)
-        item1.value, item2.value = item2.value, item1.value
-
+        idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
+        node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
+    
     def __fixNodeRemove(self, node):
         if node.valcnt == 0:
             if node is self.root:
@@ -220,16 +215,10 @@ class TTTree(object):
                 pass
 
     def __fixNodeInsert(self, node):
-        print 'cons:', node, node.isConsistent()
         if not node.isConsistent():
             # conflict detected, try to resolve it
-            if node.isLeafNode() and node is not self.root:
-                
-    #            print node.min, node.med, node.max
+            if node.isLeafNode() and node is not self.root:               
                 # case for leaf node
-    #            print 'parent for %s: %s %s' % (node, node.parent, node.parent.parent)
-    #            print self.root.links[1]
-    #            print '----'
                 node.parent.insertValue(node.med)
                 node.parent.removeLink(node)
                 # split the node
@@ -247,14 +236,12 @@ class TTTree(object):
                 else:                    
                     self.root = Node(node.med)
                     parent = self.root
-                    print 'root work'
 
                 # split the node         
                 leftNode = Node(node.min, parent)
                 rightNode = Node(node.max, parent)
 
                 parent.addLink(leftNode).addLink(rightNode)
-                print links[0], links[1], links[2], links[3]
                 leftNode.addLink(links[0]).addLink(links[1])
                 rightNode.addLink(links[2]).addLink(links[3])
 
@@ -278,7 +265,6 @@ class TTTree(object):
         if node.contains(a):
             return None
         # try to insert a new value into existing node
-        print 'inserting %d' % a
         node.insertValue(a)
         self.__fixNodeInsert(node)
         return self
@@ -317,26 +303,14 @@ t.insertValue(27)
 t.insertValue(30)
 
 t.insertValue(26)
-
-
-
 t.insertValue(35)
-
-
-
-
 t.insertValue(38)
-
-
-print t.root.links[1].links[1]
-
 t.insertValue(40)
-
 t.insertValue(50)
 
 # ---------------
 
-t.removeValue(15)
+t.removeValue(40)
 
-print t.root.getLinksList()[2].getLinksList()[1]
+print t.root.links[2].links[1]
 
