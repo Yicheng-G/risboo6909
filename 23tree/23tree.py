@@ -81,6 +81,10 @@ class Node(object):
         """ Check whether this is a leaf node or not """
         return self.refcnt == 0
 
+    def isEmptyNode(self):
+        """ Returns true if node doesn't containt any  value """
+        return self.valcnt == 0
+
     def getLinkIdx(self, destNode):
         """ Get index of the link which points to the given node """
         for j in xrange(self.refcnt):
@@ -188,6 +192,21 @@ class TTTree(object):
                 return node.parent.links[refidx + 1]
         return None
 
+    def __getSiblings(self, node):
+        """ Returns node's siblings """
+        # check whether one of our siblings has two items
+        sibling1, sibling2 = None, None
+        if self.__getRightSibling(node).valcnt == 2:
+            sibling1 = self.__getRightSibling(node)
+        elif self.__getLeftSibling(node).valcnt == 2:
+            sibling1 = self.__getLeftSibling(node)
+        # subsiblings :]
+        if self.__getRightSibling(sibling1).valcnt == 2:
+            sibling2 = self.__getRightSibling(sibling1)
+        elif self.__getLeftSibling(sibling1).valcnt == 2:
+            sibling2 = self.__getLeftSibling(sibling1)
+        return sibling1, sibling2
+
     def __nextSucc(self, node):
         if not node.isLeafNode():
             return self.__nextSucc(node.minLink)
@@ -203,16 +222,37 @@ class TTTree(object):
         """ Swap any two values in nodes """
         idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
         node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
-    
+
+    def __redistLeaf(self, node, sibling1, sibling2, parent):
+        """ Redistribute values (leaf node case) """
+        if parent.valcnt == 1 and sibling1.valcnt == 2:       
+            # case 1: parent contains 1 value and sibling contains 2 values
+            
+            pass
+        elif parent.valcnt == 2 and sibling1.valcnt == 2:
+            # case 2: parent contains 2 values (therefor there are 2 siblings) and each sibling contains 2 values
+            pass
+        elif parent.valcnt == 2 and sibling1.valcnt == 2:     
+            # case 3: parent contains 2 values (therefor there are 2 siblings)
+            pass
+
+    def __redistInternal(self, node, sibling1, sibling2, parent):
+        """ Redistribute values (internal node case) """
+        pass
+
     def __fixNodeRemove(self, node):
-        if node.valcnt == 0:
+        if node.isEmpty():
             if node is self.root:
                 # remove the root, set new root pointer
                 pass
             else:
                 # check whether one of our siblings has two items
-#                if self.__getLeftSibling(node).valcnt == 2:
-                pass
+                sibling1, sibling2 = self.__getSiblings(node)
+                if not node.isLeafNode():
+                    self.__redistInternal(node, sibling1, sibling2, node.parent)
+                else: 
+                    self.__redistLead(node, sibling1, sibling2, node.parent)
+            
 
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
