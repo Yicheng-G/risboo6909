@@ -88,7 +88,7 @@ class Node(object):
     def getLinkIdx(self, destNode):
         """ Get index of the link which points to the given node """
         for j in xrange(self.refcnt):
-            if refs[j] == destNode: return j
+            if self.links[j] == destNode: return j
         return -1
 
     def addLink(self, anotherNode):
@@ -195,17 +195,30 @@ class TTTree(object):
     def __getSiblings(self, node):
         """ Returns node's siblings """
         # check whether one of our siblings has two items
-        sibling1, sibling2 = None, None
-        if self.__getRightSibling(node).valcnt == 2:
-            sibling1 = self.__getRightSibling(node)
-        elif self.__getLeftSibling(node).valcnt == 2:
-            sibling1 = self.__getLeftSibling(node)
+        #siblingLeft, siblingRight = None, None       
+        #subSiblingLeft, subSiblingRight = None, None
+        sibling = None
+
+        if self.__getRightSibling(node) is not None:
+            sibling = self.__getRightSibling(node)       
+        elif self.__getLeftSibling(node) is not None:
+            sibling = self.__getLeftSibling(node)
+
+        """
+        if self.__getRightSibling(node) is not None:
+            siblingRight = self.__getRightSibling(node)       
+        elif self.__getLeftSibling(node) is not None:
+            siblingLeft = self.__getLeftSibling(node)
+
         # subsiblings :]
-        if self.__getRightSibling(sibling1).valcnt == 2:
-            sibling2 = self.__getRightSibling(sibling1)
-        elif self.__getLeftSibling(sibling1).valcnt == 2:
-            sibling2 = self.__getLeftSibling(sibling1)
-        return sibling1, sibling2
+        if siblingRight is not None:
+            subSiblingRight = self.__getRightSibling(siblingRight)
+        if siblingLeft is not None:
+            subSiblingLeft = self.__getLeftSibling(siblingLeft)
+
+        return siblingRight, siblingLeft, subSiblingRight, subSiblingLeft
+        """
+        return sibling
 
     def __nextSucc(self, node):
         if not node.isLeafNode():
@@ -223,35 +236,93 @@ class TTTree(object):
         idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
         node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
 
-    def __redistLeaf(self, node, sibling1, sibling2, parent):
+#    def __redistLeaf(self, node, sR, sL, ssR, ssL, parent):
+    def __redistLeaf(self, node, parent, sib):
+        
         """ Redistribute values (leaf node case) """
-        if parent.valcnt == 1 and sibling1.valcnt == 2:       
-            # case 1: parent contains 1 value and sibling contains 2 values
+
+        """
+        right = False
+        parent = node.parent
+        if self.__getRightSibling(node) is not None:
+            sibling = self.__getRightSibling(node)
+            right = True
+        elif self.__getLeftSibling(node) is not None:
+            sibling = self.__getLeftSibling(node)
+        """
+
+        if node.isEmptyLeaf() or not node.isConsistent():
+
+            idx = 0
+            if node.min < parent.min:
+                idx = parent.values.index(parent.min)
+            else:
+                idx = parent.values.index(parent.max)
+
+            node.insertValue(parent.min)
+            parent.removeValue(parent.min)
+            parent.insertValue(sibling.min)
+            sibling.removeValue(sibling.min) 
+
+            self.__redistLeaf(sibling, parent, self.__getSiblings(sibling))
+
+        """
+        # case 1: parent contains 1 value and sibling contains 2 values         
+        if sR != None and parent.valcnt == 1 and sR.valcnt == 2:
+                # right sibling
+                node.insertValue(parent.min)
+                parent.removeValue(parent.min)
+                parent.insertValue(sR.min)
+                sR.removeValue(sR.min) 
+        elif sL != None and parent.valcnt == 1 and sL.valcnt == 2:       
+                # left sibling          
+                node.insertValue(parent.min)
+                parent.removeValue(parent.min)
+                parent.insertValue(sL.max)
+                sL.removeValue(sL.max)
+
+        # case 2: parent contains 2 values (therefor there are 2 siblings) and each sibling contains 2 values
+        elif sR != None and parent.valcnt == 2 and sR.valcnt == 2:
+            # right sibling
+            node.insertValue(parent.min)
+            parent.removeValue(parent.min)
+            parent.insertValue(sR.min)
+            sR.removeValue(sR.min)
+        elif sL != None and parent.valcnt == 2 and sL.valcnt == 2:
+            # left sibling
+            node.insertValue(parent.max)
+            parent.removeValue(parent.max)
+            parent.insertValue(sL.max)
+            sL.removeValue(sL.max)
             
-            pass
-        elif parent.valcnt == 2 and sibling1.valcnt == 2:
-            # case 2: parent contains 2 values (therefor there are 2 siblings) and each sibling contains 2 values
-            pass
-        elif parent.valcnt == 2 and sibling1.valcnt == 2:     
-            # case 3: parent contains 2 values (therefor there are 2 siblings)
-            pass
+        # case 3: parent contains 2 values (therefor there are 2 siblings), next sibling contains 1 value
+        # and then the next subsibling has 2 values again
+        elif sR != None and ssR != None and parent.valcnt == 2 and sR.valcnt == 1 and ssR.valcnt == 2:
+            node.insertValue(parent.min)
+            parent.removeValue(parent.min)
+            parent.insertValue(sR.min)
+            sR.removeValue(sR.min)
+        """
+            
 
     def __redistInternal(self, node, sibling1, sibling2, parent):
         """ Redistribute values (internal node case) """
         pass
 
     def __fixNodeRemove(self, node):
-        if node.isEmpty():
+        if node.isEmptyNode():
             if node is self.root:
                 # remove the root, set new root pointer
                 pass
             else:
                 # check whether one of our siblings has two items
-                sibling1, sibling2 = self.__getSiblings(node)
+#                sR, sL, ssR, ssL = self.__getSiblings(node)
+                sibling = self.__getSiblings(node)
                 if not node.isLeafNode():
-                    self.__redistInternal(node, sibling1, sibling2, node.parent)
-                else: 
-                    self.__redistLead(node, sibling1, sibling2, node.parent)
+#                    self.__redistInternal(node, sR, sL, ssR, ssL, node.parent)
+                    pass
+                else:
+                    self.__redistLeaf(node, node.parent, sibling)
             
 
     def __fixNodeInsert(self, node):
@@ -348,9 +419,12 @@ t.insertValue(38)
 t.insertValue(40)
 t.insertValue(50)
 
+t.insertValue(39)
+
 # ---------------
 
-t.removeValue(40)
+t.removeValue(50)
 
-print t.root.links[2].links[1]
+print t.root.links[2].links[0]
+
 
