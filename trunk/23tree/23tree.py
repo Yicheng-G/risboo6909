@@ -194,14 +194,15 @@ class TTTree(object):
     def __getSiblings(self, node):
         """ Returns node's siblings """
         # check whether one of our siblings has two items
-        sibling = None
-
-        if self.__getRightSibling(node) is not None and self.__getRightSibling(node).valcnt == 2:
-            sibling = self.__getRightSibling(node)       
-        elif self.__getLeftSibling(node) is not None and self.__getLeftSibling(node).valcnt == 2:
-            sibling = self.__getLeftSibling(node)
-
-        return sibling
+        lS, rS = None, None
+        lCnt, rCnt = 0, 0       
+        if self.__getRightSibling(node) is not None:
+            lS = self.__getRightSibling(node)
+            lCnt = lS.valcnt
+        elif self.__getLeftSibling(node) is not None:
+            rS = self.__getLeftSibling(node)
+            rCnt = rS.valcnt
+        return lS, lCnt, rS, rCnt
 
     def __nextSucc(self, node):
         if not node.isLeafNode():
@@ -225,8 +226,18 @@ class TTTree(object):
 
         if node.isEmptyNode() or not node.isConsistent():
 
-            sib = self.__getSiblings(node)           
-            if sib is not None:
+            lS, lCnt, rS, rCnt = self.__getSiblings(node)
+
+            redistribute = True
+            
+            if rS != None or lS != None:
+                if   rCnt == 2: sib = rS
+                elif lCnt == 2: sib = lS
+                elif rCnt == 1: sib, redistribute = rS, False
+                elif lCnt == 1: sib, redistribute = lS, False
+
+            if redistribute:
+                # case 1: sibling leaf exists and contains 2 items => redistribute
                 # left and right case
                 if node == parent.links[0]:
                     parent_val, sib_val = parent.min, sib.min
@@ -239,12 +250,29 @@ class TTTree(object):
                     elif sib == parent.links[0]:
                         parent_val, sib_val = parent.min, sib.max
 
-            node.insertValue(parent_val)
-            parent.removeValue(parent_val)
-            parent.insertValue(sib_val)
-            sib.removeValue(sib_val) 
+                node.insertValue(parent_val)
+                parent.removeValue(parent_val)
+                parent.insertValue(sib_val)
+                sib.removeValue(sib_val)
 
-            self.__redistLeaf(sib, parent) 
+                next_node = sib
+
+            else:
+                # case 2: sibling leaf exists and contains only 1 item => merge
+                if node == parent.links[0]:
+                    parent_val, sib_val = parent.min, sib.min
+                elif node == parent.links[1]:
+                    parent_val, sib_val = parent.max, sib.max
+                else:
+                    pass
+
+                node.insertValue(parent_val)
+                parent.removeValue(parent_val)
+                
+
+                next_node = sib
+                
+            self.__redistLeaf(next_node, parent) 
 
     def __redistInternal(self, node, sibling1, sibling2, parent):
         """ Redistribute values (internal node case) """
