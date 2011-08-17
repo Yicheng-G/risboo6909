@@ -233,11 +233,12 @@ class TTTree(object):
             if rS != None or lS != None:
                 if   rCnt == 2: sib = rS
                 elif lCnt == 2: sib = lS
-                elif rCnt == 1: sib, redistribute = rS, False
-                elif lCnt == 1: sib, redistribute = lS, False
+                elif rCnt == 1: sib, redistribute = lS, False
+                elif lCnt == 1: sib, redistribute = rS, False
 
             if redistribute:
                 # case 1: sibling leaf exists and contains 2 items => redistribute
+
                 # left and right case
                 if node == parent.links[0]:
                     parent_val, sib_val = parent.min, sib.min
@@ -259,16 +260,20 @@ class TTTree(object):
 
             else:
                 # case 2: sibling leaf exists and contains only 1 item => merge
-                if node == parent.links[0]:
-                    parent_val, sib_val = parent.min, sib.min
-                elif node == parent.links[1]:
-                    parent_val, sib_val = parent.max, sib.max
-                else:
-                    pass
 
-                node.insertValue(parent_val)
+                if node == parent.links[0]:
+                    parent_val = parent.min
+                elif node == parent.links[1]:
+                    parent_val = parent.max
+                else:
+                    if sib == parent.links[0]:
+                        parent_val = parent.min
+                    elif sib == parent.links[1]
+                        parent_val = parent.max
+
+                sib.insertValue(parent_val)
                 parent.removeValue(parent_val)
-                
+                parent.removeLink(node)
 
                 next_node = sib
                 
