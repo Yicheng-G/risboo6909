@@ -2,7 +2,7 @@ class Node(object):
 
     def __init__(self, v = None, parent = None):
         self.__values = []
-        self.__links = [None] * 4
+        self.__links = []
         self.__parent = parent
         if v != None:
             if type(v) is list:
@@ -37,12 +37,12 @@ class Node(object):
         if self.valcnt != 0:            
             if newVal < self.min:
                 # shift all the links to the right when adding new min element
-                self.__links = [None] + self.__links[:3]
-            elif self.valcnt == 2 and self.max > newVal > self.min:
+                self.__links = [None] + self.links[:self.refcnt]
+            elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
                 # rearrange middle links when adding med element
-                self.__links[3] = self.__links[2]
-                self.__links[2] = self.__links[1]
-                self.__links[1] = None
+                self.links[3] = self.links[2]
+                self.links[2] = self.links[1]
+                self.links[1] = None
 
     def __sort3(self, arr):
         if len(arr) >= 2:
@@ -67,10 +67,7 @@ class Node(object):
 
     def removeLink(self, node):
         """ Remove link from self to another node """
-        for idx in xrange(self.refcnt):
-            if self.links[idx] == node:
-                self.links[idx] = None
-                break
+        self.links.remove(node)
 
     def isConsistent(self):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
@@ -84,19 +81,27 @@ class Node(object):
         """ Returns true if node doesn't containt any  value """
         return self.valcnt == 0
 
+    def getLink(self, linkIdx):
+        if linkIdx >= self.refcnt or linkIdx < 0: return None
+        return self.links[linkIdx]
+
     def getLinkIdx(self, destNode):
         """ Get index of the link which points to the given node """
-        for j in xrange(self.refcnt):
-            if self.links[j] == destNode: return j
-        return -1
+        try:
+            return self.links.index(destNode)
+        except ValueError:
+            return -1
 
     def addLink(self, anotherNode):
         """ Add link to another node """
         if anotherNode is not None:
             idx = self.__getlink(anotherNode.min)
             if idx != -1:
-                self.links[idx] = anotherNode
-                anotherNode.parent = self                
+                if idx < self.refcnt:
+                    self.links[idx] = anotherNode
+                else:
+                    self.links.append(anotherNode)                
+                anotherNode.parent = self
         return self
 
     def contains(self, a):
@@ -107,7 +112,8 @@ class Node(object):
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
         idx = self.__getlink(a)
-        if idx != -1: return self.links[idx]
+        if idx != -1 and idx < self.refcnt: 
+            return self.links[idx]
         return None
 
     @property
@@ -134,10 +140,7 @@ class Node(object):
 
     @property
     def refcnt(self):
-        net = 0
-        for idx in xrange(len(self.links)):
-            if self.links[idx] is not None: net += 1
-        return net
+        return len(self.links)
 
     @property
     def values(self):
@@ -178,17 +181,14 @@ class TTTree(object):
         """ Returns left sibling of a node """
         if node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
-            if refidx != -1 and refidx != 0:
-                return node.parent.links[refidx - 1]
+            return node.parent.getLink(refidx - 1)
         return None
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
         if node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
-            tmp = node.parent.links
-            if refidx != -1 and refidx + 1 < len(tmp):
-                return node.parent.links[refidx + 1]
+            return node.parent.getLink(refidx + 1)
         return None
 
     def __getSiblings(self, node):
@@ -240,15 +240,15 @@ class TTTree(object):
                 # case 1: sibling leaf exists and contains 2 items => redistribute
 
                 # left and right case
-                if node == parent.links[0]:
+                if node == parent.getLink(0):
                     parent_val, sib_val = parent.min, sib.min
-                elif node == parent.links[1]:
+                elif node == parent.getLink(1):
                     parent_val, sib_val = parent.max, sib.max
                 else:
                     # middle case, take from the right first
-                    if sib == parent.links[1]:
+                    if sib == parent.getLink(1):
                         parent_val, sib_val = parent.max, sib.min
-                    elif sib == parent.links[0]:
+                    elif sib == parent.getLink(0):
                         parent_val, sib_val = parent.min, sib.max
 
                 node.insertValue(parent_val)
@@ -261,14 +261,14 @@ class TTTree(object):
             else:
                 # case 2: sibling leaf exists and contains only 1 item => merge
 
-                if node == parent.links[0]:
+                if node == parent.getLink(0):
                     parent_val = parent.min
-                elif node == parent.links[1]:
+                elif node == parent.getLink(1):
                     parent_val = parent.max
                 else:
-                    if sib == parent.links[0]:
+                    if sib == parent.getLink(0):
                         parent_val = parent.min
-                    elif sib == parent.links[1]
+                    elif sib == parent.getLink(1):
                         parent_val = parent.max
 
                 sib.insertValue(parent_val)
@@ -311,7 +311,6 @@ class TTTree(object):
                 self.__fixNodeInsert(node.parent)
             else:
                 # case for internal node or root node
-                links = node.links
                 
                 if node is not self.root:
                     node.parent.insertValue(node.med)
@@ -326,8 +325,8 @@ class TTTree(object):
                 rightNode = Node(node.max, parent)
 
                 parent.addLink(leftNode).addLink(rightNode)
-                leftNode.addLink(links[0]).addLink(links[1])
-                rightNode.addLink(links[2]).addLink(links[3])
+                leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
+                rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
 
                 if node is not self.root:
                     self.__fixNodeInsert(parent)
