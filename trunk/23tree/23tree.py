@@ -197,11 +197,11 @@ class TTTree(object):
         lS, rS = None, None
         lCnt, rCnt = 0, 0       
         if self.__getRightSibling(node) is not None:
-            lS = self.__getRightSibling(node)
-            lCnt = lS.valcnt
-        elif self.__getLeftSibling(node) is not None:
-            rS = self.__getLeftSibling(node)
+            rS = self.__getRightSibling(node)
             rCnt = rS.valcnt
+        if self.__getLeftSibling(node) is not None:
+            lS = self.__getLeftSibling(node)
+            lCnt = lS.valcnt
         return lS, lCnt, rS, rCnt
 
     def __nextSucc(self, node):
@@ -220,9 +220,9 @@ class TTTree(object):
         idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
         node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
 
-    def __redistLeaf(self, node, parent):
+    def __redist(self, node, parent):
         
-        """ Redistribute values (leaf node case) """
+        """ Redistribute values """
 
         if node.isEmptyNode() or not node.isConsistent():
 
@@ -231,25 +231,31 @@ class TTTree(object):
             redistribute = True
             
             if rS != None or lS != None:
-                if   rCnt == 2: sib = rS
-                elif lCnt == 2: sib = lS
-                elif rCnt == 1: sib, redistribute = lS, False
-                elif lCnt == 1: sib, redistribute = rS, False
+                if   rCnt == 2 or (rCnt == 1 and self.__getRightSibling(rS) != None and self.__getRightSibling(rS).valcnt == 2): sib = rS
+                elif lCnt == 2 or (lCnt == 1 and self.__getLeftSibling(lS) != None and self.__getRightSibling(lS).valcnt == 2): sib = lS
+                elif lCnt == 1: sib, redistribute = lS, False
+                elif rCnt == 1: sib, redistribute = rS, False
 
             if redistribute:
                 # case 1: sibling leaf exists and contains 2 items => redistribute
 
                 # left and right case
-                if node == parent.getLink(0):
-                    parent_val, sib_val = parent.min, sib.min
-                elif node == parent.getLink(1):
-                    parent_val, sib_val = parent.max, sib.max
+                if parent.valcnt == 1:
+                    if node == parent.getLink(0):
+                        parent_val, sib_val = parent.min, sib.min
+                    elif node == parent.getLink(1):
+                        parent_val, sib_val = parent.max, sib.max
                 else:
                     # middle case, take from the right first
                     if sib == parent.getLink(1):
-                        parent_val, sib_val = parent.max, sib.min
+                        if node == parent.getLink(0):
+                            parent_val, sib_val = parent.min, sib.min
+                        elif node == parent.getLink(2):
+                            parent_val, sib_val = parent.max, sib.max
                     elif sib == parent.getLink(0):
                         parent_val, sib_val = parent.min, sib.max
+                    elif sib == parent.getLink(2):
+                        parent_val, sib_val = parent.max, sib.min
 
                 node.insertValue(parent_val)
                 parent.removeValue(parent_val)
@@ -260,16 +266,19 @@ class TTTree(object):
 
             else:
                 # case 2: sibling leaf exists and contains only 1 item => merge
-
-                if node == parent.getLink(0):
-                    parent_val = parent.min
-                elif node == parent.getLink(1):
-                    parent_val = parent.max
+                if parent.valcnt == 1:
+                    if node == parent.getLink(0):
+                        parent_val = parent.min
+                    elif node == parent.getLink(1):
+                        parent_val = parent.max
                 else:
                     if sib == parent.getLink(0):
                         parent_val = parent.min
-                    elif sib == parent.getLink(1):
-                        parent_val = parent.max
+                    if sib == parent.getLink(1):
+                        if sib == rS:
+                            parent_val = parent.min
+                        elif sub == lS:
+                            parent_val = parent.max
 
                 sib.insertValue(parent_val)
                 parent.removeValue(parent_val)
@@ -277,11 +286,7 @@ class TTTree(object):
 
                 next_node = sib
                 
-            self.__redistLeaf(next_node, parent) 
-
-    def __redistInternal(self, node, sibling1, sibling2, parent):
-        """ Redistribute values (internal node case) """
-        pass
+            self.__redist(next_node, parent) 
 
     def __fixNodeRemove(self, node):
         if node.isEmptyNode():
@@ -290,12 +295,7 @@ class TTTree(object):
                 pass
             else:
                 # check whether one of our siblings has two items
-#                sR, sL, ssR, ssL = self.__getSiblings(node)
-                if not node.isLeafNode():
-#                    self.__redistInternal(node, sR, sL, ssR, ssL, node.parent)
-                    pass
-                else:
-                    self.__redistLeaf(node, node.parent)
+                self.__redist(node, node.parent)
             
 
     def __fixNodeInsert(self, node):
@@ -357,11 +357,9 @@ class TTTree(object):
         node = self.findNode(a)
         if not node.contains(a):
             return None
-        succ = node
-        if not node.isLeafNode():
-            # swap the value we want to delete with its inorder successor (always leaf)
-            succ = self.__findInorderSucc(node, a)
-            self.__swapValues(node, a, succ, succ.min)
+        # swap the value we want to delete with its inorder successor (always leaf)
+        succ = self.__findInorderSucc(node, a)
+        self.__swapValues(node, a, succ, succ.min)
         # delete leaf node value
         succ.removeValue(a)
         # fix tree if needed
@@ -388,15 +386,15 @@ t.insertValue(30)
 t.insertValue(26)
 t.insertValue(35)
 t.insertValue(38)
-t.insertValue(40)
-t.insertValue(50)
+#t.insertValue(40)
+#t.insertValue(50)
 
-t.insertValue(39)
+#t.insertValue(39)
 
 # ---------------
 
-t.removeValue(50)
+t.removeValue(26)
 
-print t.root.links[2].links[0]
+print t.root.links[1].links[1]
 
 
