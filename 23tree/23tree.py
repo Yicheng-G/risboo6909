@@ -179,14 +179,14 @@ class TTTree(object):
 
     def __getLeftSibling(self, node):
         """ Returns left sibling of a node """
-        if node.parent is not None:
+        if node is not None and node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
             return node.parent.getLink(refidx - 1)
         return None
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
-        if node.parent is not None:
+        if node is not None and node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
             return node.parent.getLink(refidx + 1)
         return None
@@ -220,83 +220,109 @@ class TTTree(object):
         idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
         node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
 
-    def __redist(self, node, parent):
+    def __fixNodeRemove(self, node, parent = -1):
         
-        """ Redistribute values """
-
-        if node.isEmptyNode() or not node.isConsistent():
-
-            lS, lCnt, rS, rCnt = self.__getSiblings(node)
-
-            redistribute = True
-            
-            if rS != None or lS != None:
-                if   rCnt == 2 or (rCnt == 1 and self.__getRightSibling(rS) != None and self.__getRightSibling(rS).valcnt == 2): sib = rS
-                elif lCnt == 2 or (lCnt == 1 and self.__getLeftSibling(lS) != None and self.__getRightSibling(lS).valcnt == 2): sib = lS
-                elif lCnt == 1: sib, redistribute = lS, False
-                elif rCnt == 1: sib, redistribute = rS, False
-
-            if redistribute:
-                # case 1: sibling leaf exists and contains 2 items => redistribute
-
-                # left and right case
-                if parent.valcnt == 1:
-                    if node == parent.getLink(0):
-                        parent_val, sib_val = parent.min, sib.min
-                    elif node == parent.getLink(1):
-                        parent_val, sib_val = parent.max, sib.max
-                else:
-                    # middle case, take from the right first
-                    if sib == parent.getLink(1):
-                        if node == parent.getLink(0):
-                            parent_val, sib_val = parent.min, sib.min
-                        elif node == parent.getLink(2):
-                            parent_val, sib_val = parent.max, sib.max
-                    elif sib == parent.getLink(0):
-                        parent_val, sib_val = parent.min, sib.max
-                    elif sib == parent.getLink(2):
-                        parent_val, sib_val = parent.max, sib.min
-
-                node.insertValue(parent_val)
-                parent.removeValue(parent_val)
-                parent.insertValue(sib_val)
-                sib.removeValue(sib_val)
-
-                next_node = sib
-
-            else:
-                # case 2: sibling leaf exists and contains only 1 item => merge
-                if parent.valcnt == 1:
-                    if node == parent.getLink(0):
-                        parent_val = parent.min
-                    elif node == parent.getLink(1):
-                        parent_val = parent.max
-                else:
-                    if sib == parent.getLink(0):
-                        parent_val = parent.min
-                    if sib == parent.getLink(1):
-                        if sib == rS:
-                            parent_val = parent.min
-                        elif sub == lS:
-                            parent_val = parent.max
-
-                sib.insertValue(parent_val)
-                parent.removeValue(parent_val)
-                parent.removeLink(node)
-
-                next_node = sib
-                
-            self.__redist(next_node, parent) 
-
-    def __fixNodeRemove(self, node):
+        """ Fix deletion """
+      
         if node.isEmptyNode():
-            if node is self.root:
-                # remove the root, set new root pointer
-                pass
-            else:
-                # check whether one of our siblings has two items
-                self.__redist(node, node.parent)
+
+            if node is not self.root:
+
+                if parent == -1:
+                    parent = node.parent
+     
+                if node.isEmptyNode() or not node.isConsistent():
+
+                    lS, lCnt, rS, rCnt = self.__getSiblings(node)
+                    rSS, lSS = self.__getRightSibling(rS), self.__getLeftSibling(lS)
+
+                    redistribute = True
+                    
+                    if rS != None or lS != None:
+
+                        if   rCnt == 2 or (rCnt == 1 and rSS != None and rSS.valcnt == 2):
+                            sib = rS
+                        elif lCnt == 2 or (lCnt == 1 and lSS != None and lSS.valcnt == 2):
+                            sib = lS
+                        elif lCnt == 1:
+                            sib, redistribute = lS, False
+                        elif rCnt == 1:
+                            sib, redistribute = rS, False
+
+                    if redistribute:
+                        # case 1: sibling leaf exists and contains 2 items => redistribute
+
+                        # left and right case
+                        if parent.valcnt == 1:
+                            if node == parent.getLink(0):
+                                parent_val, sib_val = parent.min, sib.min
+                                child = sib.chooseChild(sib_val - 1)
+                            elif node == parent.getLink(1):
+                                parent_val, sib_val = parent.max, sib.max
+                                child = sib.chooseChild(sib_val + 1)  
+                        else:
+                            if sib == parent.getLink(1):
+                                # left
+                                if node == parent.getLink(0):
+                                    parent_val, sib_val = parent.min, sib.min
+                                    child = sib.chooseChild(sib_val - 1)
+                                # right
+                                elif node == parent.getLink(2):
+                                    parent_val, sib_val = parent.max, sib.max
+                                    child = sib.chooseChild(sib_val + 1)
+                            # middle
+                            elif sib == parent.getLink(2):
+                                parent_val, sib_val = parent.max, sib.min
+                                child = sib.chooseChild(sib_val - 1)
+                            elif sib == parent.getLink(0):
+                                parent_val, sib_val = parent.min, sib.max
+                                child = sib.chooseChild(sib_val + 1)
+
+                        if not node.isLeafNode():
+                            # if this is not a leaf node, redistribute the links also
+                            node.addLink(child)
+                            sib.removeLink(child)
+
+                        node.insertValue(parent_val)
+                        parent.removeValue(parent_val)
+                        parent.insertValue(sib_val)
+                        sib.removeValue(sib_val)                
+
+                        next_node = sib
+
+                    else:
+                        # case 2: sibling leaf exists and contains only 1 item => merge
+                        if parent.valcnt == 1:
+                            parent_val = parent.values[0]
+                        else:                            
+                            if sib == parent.getLink(0):
+                                parent_val = parent.min
+                            elif sib == parent.getLink(1):
+                                if sib == rS:
+                                    parent_val = parent.min
+                                elif sib == lS:
+                                    parent_val = parent.max
+
+                        child = node.getLink(0)
+
+                        assert(node.refcnt == 1)
+
+                        if not node.isLeafNode():
+                            sib.addLink(child)
+
+                        sib.insertValue(parent_val)
+                        parent.removeValue(parent_val)
+                        parent.removeLink(node)
+
+                        next_node = sib
+                    
+                self.__fixNodeRemove(next_node, parent) 
             
+            else:
+                # root node
+                self.root = self.getLink(0)
+                        
+
 
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
@@ -310,8 +336,7 @@ class TTTree(object):
                 node.parent.addLink(Node(node.max, node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
-                # case for internal node or root node
-                
+                # case for internal node or root node 
                 if node is not self.root:
                     node.parent.insertValue(node.med)
                     node.parent.removeLink(node)
@@ -319,8 +344,7 @@ class TTTree(object):
                 else:                    
                     self.root = Node(node.med)
                     parent = self.root
-
-                # split the node         
+                # split the node
                 leftNode = Node(node.min, parent)
                 rightNode = Node(node.max, parent)
 
