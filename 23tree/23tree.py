@@ -36,7 +36,7 @@ class Node(object):
         # rearrange links when adding a new node
         if self.valcnt != 0:            
             if newVal < self.min:
-                # shift all the links to the right when adding new min element
+                # shift all the links to the right when adding new in element
                 self.__links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
                 # rearrange middle links when adding med element
@@ -167,6 +167,7 @@ class TTTree(object):
 
     def __str__(self):
         """ String representation of a tree """
+        
         pass
 
     def __find(self, curNode, a):
@@ -217,8 +218,9 @@ class TTTree(object):
 
     def __swapValues(self, node1, a1, node2, a2):
         """ Swap any two values in nodes """
-        idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
-        node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
+        if node1 is not node2:
+            idx1, idx2 = node1.values.index(a1), node2.values.index(a2)
+            node1.values[idx1], node2.values[idx2] = node2.values[idx2], node1.values[idx1]
 
     def __fixNodeRemove(self, node, parent = -1):
         
@@ -230,7 +232,7 @@ class TTTree(object):
 
                 if parent == -1:
                     parent = node.parent
-     
+
                 if node.isEmptyNode() or not node.isConsistent():
 
                     lS, lCnt, rS, rCnt = self.__getSiblings(node)
@@ -321,9 +323,7 @@ class TTTree(object):
             else:
                 # root node
                 self.root = self.getLink(0)
-                        
-
-
+                     
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
             # conflict detected, try to resolve it
@@ -377,12 +377,12 @@ class TTTree(object):
         return self
 
     def removeValue(self, a):
-        """ Removes a value from the tree and keeps it balanced """
+        """ Removes a value from the tree and keeps it balanced """       
         node = self.findNode(a)
         if not node.contains(a):
             return None
         # swap the value we want to delete with its inorder successor (always leaf)
-        succ = self.__findInorderSucc(node, a)
+        succ = self.__findInorderSucc(node, a)     
         self.__swapValues(node, a, succ, succ.min)
         # delete leaf node value
         succ.removeValue(a)
@@ -408,8 +408,9 @@ t.insertValue(27)
 t.insertValue(30)
 
 t.insertValue(26)
-t.insertValue(35)
-t.insertValue(38)
+t.insertValue(13)
+#t.insertValue(35)
+#t.insertValue(38)
 #t.insertValue(40)
 #t.insertValue(50)
 
@@ -417,8 +418,9 @@ t.insertValue(38)
 
 # ---------------
 
-t.removeValue(26)
+t.removeValue(13)
+#t.insertValue(26)
 
-print t.root.links[1].links[1]
+print t.root.links[0].links[0]
 
 
