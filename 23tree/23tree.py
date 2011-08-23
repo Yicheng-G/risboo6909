@@ -17,19 +17,13 @@ class Node(object):
             out += (str(v) + ' ')
         return out
 
-    def __getlink(self, a): 
-        if self.valcnt == 1:
-            if a < self.min:    return 0
-            if a > self.max:    return 1
-        elif self.valcnt == 2:
-            if a < self.min:    return 0
-            if a > self.max:    return 2
-            if self.min < a < self.max: return 1
-        elif self.valcnt == 3:
-            if a < self.min:    return 0
-            if a > self.max:    return 3
-            if self.min < a < self.med:   return 1
-            if self.med < a < self.max:   return 2
+    def __getlink(self, a):
+        for idx in xrange(self.valcnt):
+            if idx == 0: 
+                if a < self.values[idx]: return idx
+            else: 
+                if self.values[idx - 1] < a < self.values[idx]:  return idx
+            if idx == self.valcnt - 1: return idx + 1
         return -1
 
     def __rearrangeLinks(self, newVal):
