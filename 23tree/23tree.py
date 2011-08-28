@@ -106,7 +106,9 @@ class Node(object):
 
     def contains(self, a):
         """ Check if node contains a given value """
-        return False if ((self.min > a or self.max < a) or self.valcnt is 0) else (a in self.values)
+        if self.valcnt is 0:
+            return False
+        return False if (self.min > a or self.max < a) else (a in self.values)
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
@@ -126,10 +128,6 @@ class Node(object):
     @property
     def max(self):
         return self.values[self.valcnt - 1]
-
-    @property
-    def minLink(self):
-        return self.links[0]
 
     @property
     def valcnt(self):
@@ -154,7 +152,6 @@ class Node(object):
     @parent.setter
     def parent(self, ref):
         self.__parent = ref
-
 
 
 class TTTree(object):
@@ -203,7 +200,7 @@ class TTTree(object):
 
     def __nextSucc(self, node):
         if not node.isLeafNode():
-            return self.__nextSucc(node.minLink)
+            return self.__nextSucc(node.links[0])
         return node
 
     def __findInorderSucc(self, node, a):
@@ -307,7 +304,6 @@ class TTTree(object):
                         parent.removeLink(node)
 
                         if not node.isLeafNode():
-                            assert(node.refcnt == 1)
                             sib.addLink(child)
 
                         next_node = parent
