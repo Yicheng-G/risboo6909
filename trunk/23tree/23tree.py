@@ -29,7 +29,7 @@ class Node(object):
     def __rearrangeLinks(self, newVal):
         # rearrange links when adding a new node
         if self.valcnt != 0:            
-            if newVal < self.min and not self.isLeafNode():
+            if newVal < self.min and not self.isLeafNode() and self.refcnt < 3: 
                 # shift all the links to the right when adding new in element
                 self.__links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
@@ -50,7 +50,7 @@ class Node(object):
 
     def insertValue(self, newVal):
         if self.valcnt < 3:
-            self.__rearrangeLinks(newVal)            
+            self.__rearrangeLinks(newVal)  
             self.values.append(newVal)
             self.__sort3(self.values)
 
@@ -276,15 +276,15 @@ class TTTree(object):
                                 parent_val, sib_val = parent.min, sib.max
                                 child = sib.chooseChild(sib_val + 1)
 
+                        node.insertValue(parent_val)
+                        parent.removeValue(parent_val)
+                        parent.insertValue(sib_val)
+                        sib.removeValue(sib_val)                      
+
                         if not node.isLeafNode():
                             # if this is not a leaf node, redistribute the links also
                             node.addLink(child)
                             sib.removeLink(child)
-
-                        node.insertValue(parent_val)
-                        parent.removeValue(parent_val)
-                        parent.insertValue(sib_val)
-                        sib.removeValue(sib_val)                
 
                         next_node = sib
 
@@ -312,7 +312,7 @@ class TTTree(object):
                             sib.addLink(child)
 
                         next_node = parent
-                    
+                        
                 self.__fixNodeRemove(next_node, next_node.parent) 
             
             else:
@@ -403,17 +403,27 @@ t.insertValue(32)
 t.insertValue(65)
 
 t.insertValue(10)
-#print t.root.links[0]
 t.insertValue(20)
-#t.insertValue(31)
+t.insertValue(31)
 
-#t.insertValue(40)
-#t.insertValue(60)
-#t.insertValue(70)
+t.insertValue(40)
+t.insertValue(60)
+t.insertValue(70)
 
-print '*', t.root.links[1].links[1]
+t.insertValue(41)
+t.insertValue(42)
 
-#t.removeValue(20)
+t.removeValue(20)
 
-#print t.root
+t.insertValue(20)
+
+t.removeValue(42)
+
+t.insertValue(42)
+
+t.removeValue(50)
+#t.removeValue(30)
+
+print '*', t.root.links[2].links[1]
+
 
