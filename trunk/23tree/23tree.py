@@ -29,7 +29,7 @@ class Node(object):
     def __rearrangeLinks(self, newVal):
         # rearrange links when adding a new node
         if self.valcnt != 0:            
-            if newVal < self.min:
+            if newVal < self.min and not self.isLeafNode():
                 # shift all the links to the right when adding new in element
                 self.__links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
@@ -91,10 +91,13 @@ class Node(object):
         if anotherNode is not None:
             idx = self.__getlink(anotherNode.min)
             if idx != -1:
-                if idx < self.refcnt:
+                if idx < self.refcnt and self.links[idx] is None:
                     self.links[idx] = anotherNode
                 else:
-                    self.links.append(anotherNode)                
+                    if idx >= self.refcnt:
+                        self.links.append(anotherNode)
+                    else:
+                        self.links.insert(idx, anotherNode)
                 anotherNode.parent = self
         return self
 
@@ -247,7 +250,6 @@ class TTTree(object):
 
                     if redistribute:
                         # case 1: redistribute
-
                         # left and right case
                         if parent.valcnt == 1:
                             if node == parent.getLink(0):
@@ -288,7 +290,6 @@ class TTTree(object):
 
                     else:
                         # case 2: merge
-                        print 'merge'
                         if parent.valcnt == 1:
                             parent_val = parent.values[0]
                         else:                            
@@ -321,7 +322,7 @@ class TTTree(object):
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
             # conflict detected, try to resolve it
-            if node.isLeafNode() and node is not self.root:               
+            if node.isLeafNode() and node is not self.root:
                 # case for leaf node
                 node.parent.insertValue(node.med)
                 node.parent.removeLink(node)
@@ -338,10 +339,10 @@ class TTTree(object):
                 else:                    
                     self.root = Node(node.med)
                     parent = self.root
+
                 # split the node
                 leftNode = Node(node.min, parent)
                 rightNode = Node(node.max, parent)
-
                 parent.addLink(leftNode).addLink(rightNode)
                 leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
                 rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
@@ -396,24 +397,23 @@ t = TTTree()
 
 t.insertValue(50)
 t.insertValue(30)
-t.insertValue(10)
+t.insertValue(11)
 
-t.insertValue(20)
-t.insertValue(40)
+t.insertValue(32)
 t.insertValue(65)
 
-t.insertValue(90)
-t.insertValue(60)
+t.insertValue(10)
+#print t.root.links[0]
+t.insertValue(20)
+#t.insertValue(31)
 
-t.insertValue(70)
-t.insertValue(80)
-t.insertValue(100)
+#t.insertValue(40)
+#t.insertValue(60)
+#t.insertValue(70)
 
-t.removeValue(100)
-t.removeValue(90)
-t.removeValue(80)
+print '*', t.root.links[1].links[1]
 
-t.removeValue(60)
+#t.removeValue(20)
 
-print t.root.links[1]
+#print t.root
 
