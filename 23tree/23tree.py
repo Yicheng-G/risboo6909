@@ -56,12 +56,14 @@ class Node(object):
 
     def removeValue(self, val):
         """ Remove value from the node """
-        if not self.contains(val): return None
-        del self.values[self.values.index(val)]
+        if self.contains(val):
+            del self.values[self.values.index(val)]
+        return self
 
     def removeLink(self, node):
         """ Remove link from self to another node """
         self.links.remove(node)
+        return self
 
     def isConsistent(self):
         """ Check whether the node is consistent, this means it doesn't contain 3 items or 4 links """
@@ -76,7 +78,8 @@ class Node(object):
         return self.valcnt == 0
 
     def getLink(self, linkIdx):
-        if linkIdx >= self.refcnt or linkIdx < 0: return None
+        if linkIdx >= self.refcnt or linkIdx < 0:
+            return None
         return self.links[linkIdx]
 
     def getLinkIdx(self, destNode):
@@ -103,15 +106,13 @@ class Node(object):
 
     def contains(self, a):
         """ Check if node contains a given value """
-        if self.valcnt == 0:  return False
-        return False if (self.min > a or self.max < a) else (a in self.values)
+        return False if ((self.min > a or self.max < a) or self.valcnt is 0) else (a in self.values)
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
         idx = self.__getlink(a)
         if idx != -1 and idx < self.refcnt: 
             return self.links[idx]
-        return None
 
     @property
     def min(self):
@@ -121,7 +122,6 @@ class Node(object):
     def med(self):
         if self.valcnt == 3:
             return self.values[1]
-        else: return None
 
     @property
     def max(self):
@@ -180,7 +180,6 @@ class TTTree(object):
         if node is not None and node.parent is not None:
             refidx = node.parent.getLinkIdx(node)
             return node.parent.getLink(refidx - 1)
-        return None
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
