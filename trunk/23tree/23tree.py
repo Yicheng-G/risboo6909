@@ -246,7 +246,7 @@ class TTTree(object):
                             sib, redistribute = rS, False
 
                     if redistribute:
-                        # case 1: sibling leaf exists and contains 2 items => redistribute
+                        # case 1: redistribute
 
                         # left and right case
                         if parent.valcnt == 1:
@@ -287,7 +287,8 @@ class TTTree(object):
                         next_node = sib
 
                     else:
-                        # case 2: sibling leaf exists and contains only 1 item => merge
+                        # case 2: merge
+                        print 'merge'
                         if parent.valcnt == 1:
                             parent_val = parent.values[0]
                         else:                            
@@ -296,27 +297,26 @@ class TTTree(object):
                             elif sib == parent.getLink(1):
                                 if sib == rS:
                                     parent_val = parent.min
-                                elif sib == lS:
+                                if sib == lS:
                                     parent_val = parent.max
 
                         child = node.getLink(0)
-
-                        assert(node.refcnt == 1)
-
-                        if not node.isLeafNode():
-                            sib.addLink(child)
 
                         sib.insertValue(parent_val)
                         parent.removeValue(parent_val)
                         parent.removeLink(node)
 
-                        next_node = sib
+                        if not node.isLeafNode():
+                            assert(node.refcnt == 1)
+                            sib.addLink(child)
+
+                        next_node = parent
                     
-                self.__fixNodeRemove(next_node, parent) 
+                self.__fixNodeRemove(next_node, next_node.parent) 
             
             else:
                 # root node
-                self.root = self.getLink(0)
+                self.root = self.root.getLink(0)
                      
     def __fixNodeInsert(self, node):
         if not node.isConsistent():
@@ -393,28 +393,27 @@ class TTTree(object):
 
 
 t = TTTree()
-t.insertValue(12)
-t.insertValue(20)
-t.insertValue(15)
 
-t.insertValue(25)
-t.insertValue(27)
+t.insertValue(50)
 t.insertValue(30)
+t.insertValue(10)
 
-t.insertValue(26)
-t.insertValue(13)
-#t.insertValue(35)
-#t.insertValue(38)
-#t.insertValue(40)
-#t.insertValue(50)
+t.insertValue(20)
+t.insertValue(40)
+t.insertValue(65)
 
-#t.insertValue(39)
+t.insertValue(90)
+t.insertValue(60)
 
-# ---------------
+t.insertValue(70)
+t.insertValue(80)
+t.insertValue(100)
 
-t.removeValue(13)
-#t.insertValue(26)
+t.removeValue(100)
+t.removeValue(90)
+t.removeValue(80)
 
-print t.root.links[0].links[0]
+t.removeValue(60)
 
+print t.root.links[1]
 
