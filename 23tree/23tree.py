@@ -3,13 +3,8 @@ class Node(object):
     def __init__(self, v = None, parent = None):
         self.__values = []
         self.__links = []
-        self.__parent = parent
-        if v != None:
-            if type(v) is list:
-                for item in v:
-                    self.insertValue(item)
-            else:
-                self.insertValue(v)
+        self.parent = parent
+        self.insertValue(v)
 
     def __str__(self):
         out = ''
@@ -19,7 +14,7 @@ class Node(object):
 
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
-            if idx == 0: 
+            if idx is 0: 
                 if a < self.values[idx]: return idx
             else: 
                 if self.values[idx - 1] < a < self.values[idx]:  return idx
@@ -34,9 +29,7 @@ class Node(object):
                 self.__links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
                 # rearrange middle links when adding med element
-                self.links[3] = self.links[2]
-                self.links[2] = self.links[1]
-                self.links[1] = None
+                self.links[3], self.links[2], self.links[1] = self.links[2], self.links[1], None
 
     def __sort3(self, arr):
         if len(arr) >= 2:
@@ -48,11 +41,12 @@ class Node(object):
 
     # interface methods & properties
 
-    def insertValue(self, newVal):
-        if self.valcnt < 3:
-            self.__rearrangeLinks(newVal)  
-            self.values.append(newVal)
+    def insertValue(self, a): 
+        if a is not None and self.valcnt < 3:
+            self.__rearrangeLinks(a)
+            self.values.append(a)
             self.__sort3(self.values)
+        return self
 
     def removeValue(self, val):
         """ Remove value from the node """
@@ -166,7 +160,6 @@ class TTTree(object):
 
     def __find(self, curNode, a):
         if curNode.contains(a): return curNode
-        # determine where to go further
         nextNode = curNode.chooseChild(a)
         if nextNode is None:
             return curNode
@@ -175,21 +168,17 @@ class TTTree(object):
     def __getLeftSibling(self, node):
         """ Returns left sibling of a node """
         if node is not None and node.parent is not None:
-            refidx = node.parent.getLinkIdx(node)
-            return node.parent.getLink(refidx - 1)
+            return node.parent.getLink(node.parent.getLinkIdx(node) - 1)
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
         if node is not None and node.parent is not None:
-            refidx = node.parent.getLinkIdx(node)
-            return node.parent.getLink(refidx + 1)
-        return None
+            return node.parent.getLink(node.parent.getLinkIdx(node) + 1)
 
     def __getSiblings(self, node):
         """ Returns node's siblings """
         # check whether one of our siblings has two items
-        lS, rS = None, None
-        lCnt, rCnt = 0, 0       
+        lS, rS, lCnt, rCnt = None, None, 0, 0
         if self.__getRightSibling(node) is not None:
             rS = self.__getRightSibling(node)
             rCnt = rS.valcnt
@@ -234,7 +223,6 @@ class TTTree(object):
                     redistribute = True
                     
                     if rS != None or lS != None:
-
                         if   rCnt == 2 or (rCnt == 1 and rSS != None and rSS.valcnt == 2):
                             sib = rS
                         elif lCnt == 2 or (lCnt == 1 and lSS != None and lSS.valcnt == 2):
@@ -358,16 +346,21 @@ class TTTree(object):
 
     def insertValue(self, a):
         """ Inserts a new value to tree and keeps it balanced """
-        node = self.findNode(a)
-        if node.contains(a):
-            return None
-        # try to insert a new value into existing node
-        node.insertValue(a)
-        self.__fixNodeInsert(node)
+        if a is not None:
+            node = self.findNode(a)
+            if node.contains(a):
+                return None
+            # try to insert a new value into existing node
+            node.insertValue(a)
+            self.__fixNodeInsert(node)
         return self
 
+    def insertList(self, xs):
+        if xs is not None and type(xs) is list:
+            for item in xs: self.insertValue(item)
+
     def removeValue(self, a):
-        """ Removes a value from the tree and keeps it balanced """       
+        """ Removes a value from the tree and keeps it balanced """
         node = self.findNode(a)
         if not node.contains(a):
             return None
@@ -390,23 +383,7 @@ class TTTree(object):
 
 t = TTTree()
 
-t.insertValue(50)
-t.insertValue(30)
-t.insertValue(11)
-
-t.insertValue(32)
-t.insertValue(65)
-
-t.insertValue(10)
-t.insertValue(20)
-t.insertValue(31)
-
-t.insertValue(40)
-t.insertValue(60)
-t.insertValue(70)
-
-t.insertValue(41)
-t.insertValue(42)
+t.insertList([50, 30, 11, 32, 65, 10, 20, 31, 40, 60, 70, 41, 42])
 
 t.removeValue(20)
 
