@@ -167,12 +167,12 @@ class TTTree(object):
 
     def __getLeftSibling(self, node):
         """ Returns left sibling of a node """
-        if node is not None and node.parent is not None:
+        if (node and node.parent) is not None:
             return node.parent.getLink(node.parent.getLinkIdx(node) - 1)
     
     def __getRightSibling(self, node):
         """ Returns right sibling of a node """
-        if node is not None and node.parent is not None:
+        if (node and node.parent) is not None:
             return node.parent.getLink(node.parent.getLinkIdx(node) + 1)
 
     def __getSiblings(self, node):
@@ -222,7 +222,7 @@ class TTTree(object):
 
                     redistribute = True
                     
-                    if rS != None or lS != None:
+                    if (rS or lS) is not None:
                         if   rCnt == 2 or (rCnt == 1 and rSS != None and rSS.valcnt == 2):
                             sib = rS
                         elif lCnt == 2 or (lCnt == 1 and lSS != None and lSS.valcnt == 2):
@@ -294,9 +294,7 @@ class TTTree(object):
                         if not node.isLeafNode():
                             sib.addLink(child)
 
-                        next_node = parent
-                        
-                self.__fixNodeRemove(next_node, next_node.parent) 
+                self.__fixNodeRemove(parent, parent.parent) 
             
             else:
                 # root node
@@ -324,16 +322,13 @@ class TTTree(object):
                     parent = self.root
 
                 # split the node
-                leftNode = Node(node.min, parent)
-                rightNode = Node(node.max, parent)
+                leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
                 parent.addLink(leftNode).addLink(rightNode)
                 leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
                 rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
 
                 if node is not self.root:
                     self.__fixNodeInsert(parent)
-
-        else: return
 
     def contains(self, a):
         """ See if we have a given value in our tree """ 
