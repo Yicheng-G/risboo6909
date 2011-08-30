@@ -7,7 +7,7 @@
 """
 
 import pygame
-from tree import TTTree
+from tttree import TTTree
 
 t = TTTree()
 
