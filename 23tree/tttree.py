@@ -1,3 +1,19 @@
+"""
+
+    Python 2-3 Tree implementation
+
+    2-3 Tree is a balanced tree each node of which may contain 2 elements
+    and 3 references on its children.
+
+    Element lookup speed is log2(N) < x < log3(N)
+    Insertion and deletion is about 2 * log2(N)
+
+    See http://en.wikipedia.org/wiki/2-3_tree for more info
+
+    2011 by Boris Tatarintsev
+
+"""
+
 class Node(object):
 
     def __init__(self, v = None, parent = None):
