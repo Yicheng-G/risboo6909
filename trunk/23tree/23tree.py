@@ -9,7 +9,7 @@ class Node(object):
     def __str__(self):
         out = ''
         for v in self.values:
-            out += (str(v) + ' ')
+            out += (' ' + str(v) + ' ')
         return out
 
     def __getlink(self, a):
@@ -21,17 +21,18 @@ class Node(object):
             if idx == self.valcnt - 1: return idx + 1
         return -1
 
-    def __rearrangeLinks(self, newVal):
-        # rearrange links when adding a new node
+    def __rearrangeLinks(self, a):
+        """ Rearrange links when adding a new node """
         if self.valcnt != 0:            
-            if newVal < self.min and not self.isLeafNode() and self.refcnt < 3: 
+            if a < self.min and not self.isLeafNode() and self.refcnt < 3: 
                 # shift all the links to the right when adding new in element
                 self.__links = [None] + self.links[:self.refcnt]
-            elif self.valcnt == 2 and self.refcnt == 3 and self.max > newVal > self.min:
+            elif self.valcnt == 2 and self.refcnt == 3 and self.max > a > self.min:
                 # rearrange middle links when adding med element
                 self.links[3], self.links[2], self.links[1] = self.links[2], self.links[1], None
 
     def __sort3(self, arr):
+        """ Sort 2 or 3 arrays (very rubost and fast) """
         if len(arr) >= 2:
             if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
         if len(arr) == 3:
@@ -41,7 +42,8 @@ class Node(object):
 
     # interface methods & properties
 
-    def insertValue(self, a): 
+    def insertValue(self, a):
+        """ Insert a value into node """
         if a is not None and self.valcnt < 3:
             self.__rearrangeLinks(a)
             self.values.append(a)
@@ -49,7 +51,7 @@ class Node(object):
         return self
 
     def removeValue(self, val):
-        """ Remove value from the node """
+        """ Remove value from node """
         if self.contains(val):
             del self.values[self.values.index(val)]
         return self
@@ -72,6 +74,7 @@ class Node(object):
         return self.valcnt == 0
 
     def getLink(self, linkIdx):
+        """ Get link by its index, return None if there is no link with such an index """
         if linkIdx >= self.refcnt or linkIdx < 0:
             return None
         return self.links[linkIdx]
@@ -154,9 +157,18 @@ class TTTree(object):
         self.__root = Node()
 
     def __str__(self):
-        """ String representation of a tree """
-        
-        pass
+        """ String representation of a tree (parentheses form) """
+        out, stack = '', [self.root]
+        while stack:
+            node = stack.pop()
+            if node == ')':
+                out += ')'
+                continue
+            out += '%s(' % str(node)
+            stack.append(')')
+            for j in xrange(node.refcnt - 1, -1, -1):
+                stack.append(node.getLink(j))
+        return out
 
     def __find(self, curNode, a):
         if curNode.contains(a): return curNode
@@ -193,6 +205,7 @@ class TTTree(object):
         return node
 
     def __findInorderSucc(self, node, a):
+        """ Returns inorder successor of any node """
         if node.isLeafNode():
             return node
         new_node = node.chooseChild(a + 1)
@@ -330,6 +343,8 @@ class TTTree(object):
                 if node is not self.root:
                     self.__fixNodeInsert(parent)
 
+    # interface methods
+
     def contains(self, a):
         """ See if we have a given value in our tree """ 
         node = self.findNode(a)
@@ -351,6 +366,7 @@ class TTTree(object):
         return self
 
     def insertList(self, xs):
+        """ Insert a list of values into a tree """
         if xs is not None and type(xs) is list:
             for item in xs: self.insertValue(item)
 
@@ -391,6 +407,7 @@ t.insertValue(42)
 t.removeValue(50)
 #t.removeValue(30)
 
-print '*', t.root.links[2].links[1]
+#print '*', t.root.links[2].links[1]
+print t
 
 
