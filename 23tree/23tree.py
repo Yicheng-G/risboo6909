@@ -382,7 +382,13 @@ class TTTree(object):
         succ.removeValue(a)
         # fix tree if needed
         self.__fixNodeRemove(succ)
-        
+        return self
+
+    def removeList(self, xs):
+       """ Deletes a list of values from a tree """ 
+       if xs is not None and type(xs) is list:
+            for item in xs: self.removeValue(item)
+
     @property
     def root(self):
         return self.__root
@@ -395,19 +401,9 @@ class TTTree(object):
 t = TTTree()
 
 t.insertList([50, 30, 11, 32, 65, 10, 20, 31, 40, 60, 70, 41, 42])
+t.removeList([20, 42, 50])
+t.insertList([20, 42])
 
-t.removeValue(20)
-
-t.insertValue(20)
-
-t.removeValue(42)
-
-t.insertValue(42)
-
-t.removeValue(50)
-#t.removeValue(30)
-
-#print '*', t.root.links[2].links[1]
 print t
 
 
