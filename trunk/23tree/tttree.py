@@ -45,6 +45,7 @@ class Node(object):
                 self.__links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > a > self.min:
                 # rearrange middle links when adding med element
+                if self.refcnt < 4: self.links.append(None)
                 self.links[3], self.links[2], self.links[1] = self.links[2], self.links[1], None
 
     def __sort3(self, arr):
@@ -412,14 +413,4 @@ class TTTree(object):
     @root.setter
     def root(self, ref):
         self.__root = ref
-
-
-t = TTTree()
-
-t.insertList([50, 30, 11, 32, 65, 10, 20, 31, 40, 60, 70, 41, 42])
-t.removeList([20, 42, 50])
-t.insertList([20, 42])
-
-print t
-
 
