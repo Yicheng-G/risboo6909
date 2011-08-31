@@ -9,5 +9,10 @@
 import pygame
 from tttree import TTTree
 
+def initPyGame():
+    pass
+
+
 t = TTTree()
+
 
