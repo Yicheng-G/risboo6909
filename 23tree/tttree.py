@@ -188,11 +188,12 @@ class TTTree(object):
         return out
 
     def __find(self, curNode, a):
-        if curNode.contains(a): return curNode
-        nextNode = curNode.chooseChild(a)
-        if nextNode is None:
-            return curNode
-        return self.__find(nextNode, a)
+        if curNode is not None:
+            if curNode.contains(a): return curNode
+            nextNode = curNode.chooseChild(a)
+            if nextNode is None:
+                return curNode
+            return self.__find(nextNode, a)
 
     def __getLeftSibling(self, node):
         """ Returns left sibling of a node """
@@ -390,7 +391,7 @@ class TTTree(object):
     def removeValue(self, a):
         """ Removes a value from the tree and keeps it balanced """
         node = self.findNode(a)
-        if not node.contains(a):
+        if not node or not node.contains(a):
             return None
         # swap the value we want to delete with its inorder successor (always leaf)
         succ = self.__findInorderSucc(node, a)     
@@ -417,5 +418,5 @@ class TTTree(object):
 """
 t = TTTree()
 t.insertList([11, 36, 87, 14, 49, 53, 55, 56, 58])
-t.removeList([11, 36, 87, 14, 49, 53])
+t.removeList([11, 36, 87, 14, 49, 53, 55, 56, 58])
 """
