@@ -415,8 +415,8 @@ class TTTree(object):
     def root(self, ref):
         self.__root = ref
 
-"""
+# bug!
 t = TTTree()
-t.insertList([11, 36, 87, 14, 49, 53, 55, 56, 58])
-t.removeList([11, 36, 87, 14, 49, 53, 55, 56, 58])
-"""
+t.insertList([65, 98, 4, 45, 13, 48, 22, 25, 57, 91])
+t.removeList([65, 98, 4, 45, 13, 48, 22])
+
