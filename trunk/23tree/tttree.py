@@ -20,7 +20,11 @@ class Node(object):
         self.reinit(v, parent)
 
     def __str__(self):
-        return ''.join([' %s ' % str(v) for v in self.values])
+        out = []
+        for v in self.values:
+            if v is not None:
+                out.append(' %s ' % str(v))
+        return ''.join(out) 
 
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
@@ -36,7 +40,7 @@ class Node(object):
         if self.valcnt != 0:            
             if a < self.min and not self.isLeafNode() and self.refcnt < 3: 
                 # shift all the links to the right when adding new in element
-                self.__links = [None] + self.links[:self.refcnt]
+                self.links = [None] + self.links[:self.refcnt]
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > a > self.min:
                 # rearrange middle links when adding med element
                 self.links.append(None)
@@ -54,8 +58,8 @@ class Node(object):
     # interface methods & properties
 
     def reinit(self, v = None, parent = None):
-        self.__values, self.valcnt = None, 0
-        self.__links = []
+        self.values, self.valcnt = None, 0
+        self.links = []
         self.parent = parent
         self.insertValue(v)
         return self
@@ -63,10 +67,9 @@ class Node(object):
     def insertValue(self, a):
         """ Insert a value into node """
         if a is not None and self.valcnt < 3:
-            if self.valcnt is 0: self.__values = [None] * 3
+            if self.valcnt is 0: self.values = [None] * 3
             self.__rearrangeLinks(a)
-#            self.values.append(a)
-            self.__values[self.valcnt] = a
+            self.values[self.valcnt] = a
             self.valcnt += 1
             self.__sort3(self.values, self.valcnt)
         return self
@@ -74,9 +77,14 @@ class Node(object):
     def removeValue(self, val):
         """ Remove value from node """
         if self.contains(val):
-            del self.values[self.values.index(val)]
-            self.__values += [None] 
-            self.valcnt += 1
+            idx = self.values.index(val)
+            if idx == 0:
+                self.values[0], self.values[1], self.values[2] = self.values[1], self.values[2], None
+            elif idx == 1:
+                self.values[1], self.values[2] = self.values[2], None
+            else:
+                self.values[2] = None
+            self.valcnt -= 1
         return self
 
     def removeLink(self, node):
@@ -153,27 +161,11 @@ class Node(object):
     def refcnt(self):
         return len(self.links)
 
-    @property
-    def values(self):
-        return self.__values
-
-    @property
-    def links(self):
-        return self.__links
-
-    @property
-    def parent(self):
-        return self.__parent
-
-    @parent.setter
-    def parent(self, ref):
-        self.__parent = ref
-
    
 class TTTree(object):
 
     def __init__(self):
-        self.__root = Node()
+        self.root = Node()
         self.lastSearchDepth = 0
 
     def __str__(self):
@@ -418,11 +410,4 @@ class TTTree(object):
        if xs is not None and type(xs) is list:
             for item in xs: self.removeValue(item)
 
-    @property
-    def root(self):
-        return self.__root
-
-    @root.setter
-    def root(self, ref):
-        self.__root = ref
 
