@@ -168,6 +168,12 @@ class Node(object):
         self.__parent = ref
 
 
+class Poll(object):
+
+    def __init__(self):
+        self.poll = []
+
+    
 class TTTree(object):
 
     def __init__(self):
@@ -280,7 +286,7 @@ class TTTree(object):
                                     parent_val, sib_val = parent.min, sib.min
                                     child = sib.chooseChild(sib_val - 1)
                                 # right
-                                elif node == parent.getLink(2):
+                                elif node == parent.getLink(2):                                    
                                     parent_val, sib_val = parent.max, sib.max
                                     child = sib.chooseChild(sib_val + 1)
                             # middle
@@ -325,7 +331,9 @@ class TTTree(object):
                         if not node.isLeafNode():
                             sib.addLink(child)
 
-                self.__fixNodeRemove(parent, parent.parent) 
+                        next_node = parent
+
+                self.__fixNodeRemove(next_node, next_node.parent) 
             
             else:
                 # root node
@@ -414,9 +422,4 @@ class TTTree(object):
     @root.setter
     def root(self, ref):
         self.__root = ref
-
-# bug!
-t = TTTree()
-t.insertList([65, 98, 4, 45, 13, 48, 22, 25, 57, 91])
-t.removeList([65, 98, 4, 45, 13, 48, 22])
 
