@@ -17,16 +17,10 @@
 class Node(object):
 
     def __init__(self, v = None, parent = None):
-        self.__values = []
-        self.__links = []
-        self.parent = parent
-        self.insertValue(v)
+        self.reinit(v, parent)
 
     def __str__(self):
-        out = ''
-        for v in self.values:
-            out += (' ' + str(v) + ' ')
-        return out
+        return ''.join([' %s ' % str(v) for v in self.values])
 
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
@@ -58,6 +52,13 @@ class Node(object):
 
 
     # interface methods & properties
+
+    def reinit(self, v = None, parent = None):
+        self.__values = []
+        self.__links = []
+        self.parent = parent
+        self.insertValue(v)
+        return self
 
     def insertValue(self, a):
         """ Insert a value into node """
@@ -170,28 +171,43 @@ class Node(object):
 
 class Poll(object):
 
-    def __init__(self):
-        self.poll = []
+    def __init__(self, klass, N, maxsize):
+        self.klass = klass
+        self.poll = self.genPoll(N)
+        self.size = N
+        self.maxsize = maxsize
 
+    def genPoll(self, n):
+        return [self.klass() for x in xrange(n)]
+
+    def get(self, *args, **kwargs):
+        if not self.poll:
+            if self.size < self.maxsize:
+                self.size <<= 1
+            self.poll = self.genPoll(self.size)
+        return (self.poll.pop()).reinit(*args, **kwargs)
     
 class TTTree(object):
 
-    def __init__(self):
+    def __init__(self, use_poll = True):
         self.__root = Node()
+        self.__use_poll = use_poll
+        if self.__use_poll:
+            self.__poll = Poll(Node, 2, 1024)        
 
     def __str__(self):
         """ String representation of a tree (parentheses form) """
-        out, stack = '', [self.root]
+        out, stack = [], [self.root]
         while stack:
             node = stack.pop()
             if node == ')':
-                out += ')'
+                out.append(')')
                 continue
-            out += '%s(' % str(node)
+            out.append('%s(' % str(node))
             stack.append(')')
             for j in xrange(node.refcnt - 1, -1, -1):
-                stack.append(node.getLink(j))
-        return out
+                stack.append(node.getLink(j))        
+        return ''.join(out)
 
     def __find(self, curNode, a):
         if curNode is not None:
@@ -347,8 +363,12 @@ class TTTree(object):
                 node.parent.insertValue(node.med)
                 node.parent.removeLink(node)
                 # split the node
-                node.parent.addLink(Node(node.min, node.parent))
-                node.parent.addLink(Node(node.max, node.parent))
+                if not self.__use_poll:
+                    node.parent.addLink(Node(node.min, node.parent))
+                    node.parent.addLink(Node(node.max, node.parent))
+                else:
+                    node.parent.addLink(self.__poll.get(node.min, node.parent))
+                    node.parent.addLink(self.__poll.get(node.max, node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
                 # case for internal node or root node 
@@ -356,12 +376,18 @@ class TTTree(object):
                     node.parent.insertValue(node.med)
                     node.parent.removeLink(node)
                     parent = node.parent
-                else:                    
-                    self.root = Node(node.med)
+                else:
+                    if not self.__use_poll: 
+                        self.root = Node(node.med)
+                    else:
+                        self.root = self.__poll.get(node.med)
                     parent = self.root
 
                 # split the node
-                leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
+                if not self.__use_poll:
+                    leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
+                else:
+                    leftNode, rightNode = self.__poll.get(node.min, parent), self.__poll.get(node.max, parent)
                 parent.addLink(leftNode).addLink(rightNode)
                 leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
                 rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
@@ -423,3 +449,7 @@ class TTTree(object):
     def root(self, ref):
         self.__root = ref
 
+
+t = TTTree()
+t.insertList([1,2,3,4,5,6])
+print t
