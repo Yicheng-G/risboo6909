@@ -5,7 +5,7 @@
 from tttree import TTTree
 import random, time
 
-ITEMS = 100000
+ITEMS = 10000
 RANDMAX = 1000000
 
 
@@ -26,8 +26,11 @@ def insertTest(tree, items):
 @timer
 def consTest(tree, items): 
     print 'test 2 - checking consistency of %d elements...' % len(items)
+    tree.findInorderSucc(tree.root, tree.root.min)
+    maxDepth = tree.lastSearchDepth
     for j in items:
-        assert(tree.contains(j)) 
+        assert(tree.contains(j))
+        assert(tree.lastSearchDepth <= maxDepth)
 
 @timer
 def removeTest(tree, items):

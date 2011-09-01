@@ -173,6 +173,7 @@ class TTTree(object):
 
     def __init__(self):
         self.__root = Node()
+        self.lastSearchDepth = 0
 
     def __str__(self):
         """ String representation of a tree (parentheses form) """
@@ -188,12 +189,19 @@ class TTTree(object):
                 stack.append(node.getLink(j))        
         return ''.join(out)
 
+    def __nextSucc(self, node):
+        self.lastSearchDepth += 1
+        if not node.isLeafNode():            
+            return self.__nextSucc(node.links[0])
+        return node
+
     def __find(self, curNode, a):
         if curNode is not None:
             if curNode.contains(a): return curNode
             nextNode = curNode.chooseChild(a)
             if nextNode is None:
-                return curNode
+                return curNode            
+            self.lastSearchDepth += 1
             return self.__find(nextNode, a)
 
     def __getLeftSibling(self, node):
@@ -217,18 +225,6 @@ class TTTree(object):
             lS = self.__getLeftSibling(node)
             lCnt = lS.valcnt
         return lS, lCnt, rS, rCnt
-
-    def __nextSucc(self, node):
-        if not node.isLeafNode():
-            return self.__nextSucc(node.links[0])
-        return node
-
-    def __findInorderSucc(self, node, a):
-        """ Returns inorder successor of any node """
-        if node.isLeafNode():
-            return node
-        new_node = node.chooseChild(a + 1)
-        return self.__nextSucc(new_node)
 
     def __swapValues(self, node1, a1, node2, a2):
         """ Swap any two values in nodes """
@@ -372,8 +368,17 @@ class TTTree(object):
         return node if node.contains(a) else None
 
     def findNode(self, a):
-        """ Find the node which contains the given value """
+        """ Find the node which contains the given value """        
+        self.lastSearchDepth = 0
         return self.__find(self.root, a)
+
+    def findInorderSucc(self, node, a):
+        """ Returns inorder successor of any node """        
+        self.lastSearchDepth = 0
+        if node.isLeafNode():
+            return node
+        new_node = node.chooseChild(a + 1)
+        return self.__nextSucc(new_node)
 
     def insertValue(self, a):
         """ Inserts a new value to tree and keeps it balanced """
@@ -399,7 +404,7 @@ class TTTree(object):
         if not node or not node.contains(a):
             return None
         # swap the value we want to delete with its inorder successor (always leaf)
-        succ = self.__findInorderSucc(node, a)     
+        succ = self.findInorderSucc(node, a)
         self.__swapValues(node, a, succ, succ.min)
         # delete leaf node value
         succ.removeValue(a)
