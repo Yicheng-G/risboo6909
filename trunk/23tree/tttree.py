@@ -168,32 +168,11 @@ class Node(object):
     def parent(self, ref):
         self.__parent = ref
 
-
-class Poll(object):
-
-    def __init__(self, klass, N, maxsize):
-        self.klass = klass
-        self.poll = self.genPoll(N)
-        self.size = N
-        self.maxsize = maxsize
-
-    def genPoll(self, n):
-        return [self.klass() for x in xrange(n)]
-
-    def get(self, *args, **kwargs):
-        if not self.poll:
-            if self.size < self.maxsize:
-                self.size <<= 1
-            self.poll = self.genPoll(self.size)
-        return (self.poll.pop()).reinit(*args, **kwargs)
-    
+   
 class TTTree(object):
 
-    def __init__(self, use_poll = True):
+    def __init__(self):
         self.__root = Node()
-        self.__use_poll = use_poll
-        if self.__use_poll:
-            self.__poll = Poll(Node, 2, 1024)        
 
     def __str__(self):
         """ String representation of a tree (parentheses form) """
@@ -363,12 +342,8 @@ class TTTree(object):
                 node.parent.insertValue(node.med)
                 node.parent.removeLink(node)
                 # split the node
-                if not self.__use_poll:
-                    node.parent.addLink(Node(node.min, node.parent))
-                    node.parent.addLink(Node(node.max, node.parent))
-                else:
-                    node.parent.addLink(self.__poll.get(node.min, node.parent))
-                    node.parent.addLink(self.__poll.get(node.max, node.parent))
+                node.parent.addLink(Node(node.min, node.parent))
+                node.parent.addLink(Node(node.max, node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
                 # case for internal node or root node 
@@ -377,17 +352,11 @@ class TTTree(object):
                     node.parent.removeLink(node)
                     parent = node.parent
                 else:
-                    if not self.__use_poll: 
-                        self.root = Node(node.med)
-                    else:
-                        self.root = self.__poll.get(node.med)
+                    self.root = Node(node.med)
                     parent = self.root
 
                 # split the node
-                if not self.__use_poll:
-                    leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
-                else:
-                    leftNode, rightNode = self.__poll.get(node.min, parent), self.__poll.get(node.max, parent)
+                leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
                 parent.addLink(leftNode).addLink(rightNode)
                 leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
                 rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
@@ -408,7 +377,9 @@ class TTTree(object):
 
     def insertValue(self, a):
         """ Inserts a new value to tree and keeps it balanced """
-        if a is not None:
+        if self.root is None:
+            self.root = Node(a)
+        elif a is not None:
             node = self.findNode(a)
             if node.contains(a):
                 return None
@@ -449,7 +420,3 @@ class TTTree(object):
     def root(self, ref):
         self.__root = ref
 
-
-t = TTTree()
-t.insertList([1,2,3,4,5,6])
-print t
