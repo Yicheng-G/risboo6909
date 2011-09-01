@@ -1,3 +1,5 @@
+#! /usr/bin/python
+
 # simple set of tests for 2-3 tree
 
 from tttree import TTTree
@@ -5,7 +7,7 @@ import random, time
 
 ITEMS = 1000000
 RANDMAX = 100000000000
-tree = TTTree()
+tree = TTTree(use_poll = True)
 
 def timer(f):
     def inner(*args, **kwargs):
