@@ -5,7 +5,7 @@
 from tttree import TTTree
 import random, time
 
-ITEMS = 10000
+ITEMS = 100000
 RANDMAX = 1000000
 
 
@@ -40,7 +40,7 @@ def removeTest(tree, items):
 
 ins, cons, rem  = [], [], []
 
-for x in xrange(10):
+for x in xrange(5):
     print 'Test N%d' % x
     tree = TTTree()
     print 'generating set...'

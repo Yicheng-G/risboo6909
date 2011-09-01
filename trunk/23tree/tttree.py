@@ -42,11 +42,11 @@ class Node(object):
                 self.links.append(None)
                 self.links[3], self.links[2], self.links[1] = self.links[2], self.links[1], None
 
-    def __sort3(self, arr):
+    def __sort3(self, arr, l):
         """ Sort 2 or 3 arrays (very rubost and fast) """
-        if len(arr) >= 2:
+        if l >= 2:
             if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
-        if len(arr) == 3:
+        if l == 3:
             if arr[1] > arr[2]: arr[1], arr[2] = arr[2], arr[1]
             if arr[0] > arr[1]: arr[0], arr[1] = arr[1], arr[0]
 
@@ -54,7 +54,7 @@ class Node(object):
     # interface methods & properties
 
     def reinit(self, v = None, parent = None):
-        self.__values = []
+        self.__values, self.valcnt = None, 0
         self.__links = []
         self.parent = parent
         self.insertValue(v)
@@ -63,15 +63,20 @@ class Node(object):
     def insertValue(self, a):
         """ Insert a value into node """
         if a is not None and self.valcnt < 3:
+            if self.valcnt is 0: self.__values = [None] * 3
             self.__rearrangeLinks(a)
-            self.values.append(a)
-            self.__sort3(self.values)
+#            self.values.append(a)
+            self.__values[self.valcnt] = a
+            self.valcnt += 1
+            self.__sort3(self.values, self.valcnt)
         return self
 
     def removeValue(self, val):
         """ Remove value from node """
         if self.contains(val):
             del self.values[self.values.index(val)]
+            self.__values += [None] 
+            self.valcnt += 1
         return self
 
     def removeLink(self, node):
@@ -143,10 +148,6 @@ class Node(object):
     @property
     def max(self):
         return self.values[self.valcnt - 1]
-
-    @property
-    def valcnt(self):
-        return len(self.values)
 
     @property
     def refcnt(self):
