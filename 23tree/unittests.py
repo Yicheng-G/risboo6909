@@ -48,10 +48,15 @@ for x in xrange(5):
     for x in xrange(ITEMS):
         val = random.randint(0, RANDMAX)
         if val not in items: items.add(val)
-    print 'done!'
+    print 'done'
     ins.append(insertTest(tree, items))
     cons.append(consTest(tree, items))
+    print 'shuffling...'
+    items = list(items)
+    random.shuffle(items)
+    print 'done'
     rem.append(removeTest(tree, items))
+    assert(tree.root is None)
 
 print
 print 'avg insert time %f' % (sum(ins) / len(ins))
