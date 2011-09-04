@@ -151,14 +151,14 @@ class Node(object):
 
     def contains(self, a):
         """ Check if node contains a given value """
-        if self.valcnt is 0:
-            return False
-        return False if (self.values[0] > a or self.values[self.valcnt - 1] < a) else (a in self.values)
+        if self.valcnt is not 0:
+            return False if (self.values[0] > a or self.values[self.valcnt - 1] < a) else (a in self.values)
+        return False
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
         idx = self.__getlink(a)
-        if idx != -1 and idx < self.refcnt: 
+        if 0 <= idx < self.refcnt: 
             return self.links[idx]
   
  
@@ -190,7 +190,8 @@ class TTTree(object):
 
     def __find(self, curNode, a):
         if curNode is not None:
-            if curNode.contains(a): return curNode
+            if curNode.contains(a):
+                return curNode
             nextNode = curNode.chooseChild(a)
             if nextNode is None:
                 return curNode            
