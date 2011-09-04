@@ -14,70 +14,11 @@
 
 """
 
-class LinksContainer(object):
-
-    def __init__(self):
-        self.links = [None] * 4
-        self.length = 0
-
-    def __getitem__(self, idx):
-        return self.links[idx]
-
-    def __setitem__(self, idx, val):
-        self.links[idx] = val
-
-    def __len__(self):
-        return self.length
-
-    def addLink(self, link):
-        self.links[self.length] = link
-        self.length += 1
-
-    def insertLink(self, idx, anotherNode):
-        if idx == 0:
-            self.links[0],self.links[1],self.links[2], self.links[3] = anotherNode,self.links[0],self.links[1], self.links[2]
-        elif idx == 1:
-            self.links[1], self.links[2], self.links[3] = anotherNode, self.links[1], self.links[2]
-        elif idx == 2:
-            self.links[2], self.links[3] = anotherNode, self.links[2]
-        else:
-            self.links[3] = anotherNode
-        self.length += 1
-
-    def removeLink(self, idx):
-        if idx == 0:
-            self.links[0], self.links[1], self.links[2], self.links[3] = self.links[1], self.links[2], self.links[3], None
-        elif idx == 1:
-            self.links[1], self.links[2], self.links[3] = self.links[2], self.links[3], None
-        elif idx == 2:
-            self.links[2], self.links[3] = self.links[3], None
-        else:
-            self.links[3] = None
-        self.length -= 1
-
-    def insert(self, idx, item):
-        self.insertLink(idx, item)
-
-    def append(self, item):
-        self.addLink(item)
-
-    def remove(self, item):
-        try:
-            self.removeLink(self.links.index(item))
-        except:
-            raise
-    
-    def index(self, item):
-        try:
-            return self.links.index(item)
-        except:
-            raise
-
 class Node(object):
 
     def __init__(self, v = None, parent = None):
         self.values, self.valcnt = None, 0
-        self.links = LinksContainer()
+        self.links, self.refcnt = [None] * 4, 0
         self.parent = parent
         self.insertValue(v)
 
@@ -97,15 +38,41 @@ class Node(object):
             if idx == self.valcnt - 1: return idx + 1
         return -1
 
+    def __addLink(self, link):
+        self.links[self.refcnt] = link
+        self.refcnt += 1
+
+    def __insertLink(self, idx, anotherNode):
+        if idx == 0:
+            self.links[0],self.links[1],self.links[2], self.links[3] = anotherNode,self.links[0],self.links[1], self.links[2]
+        elif idx == 1:
+            self.links[1], self.links[2], self.links[3] = anotherNode, self.links[1], self.links[2]
+        elif idx == 2:
+            self.links[2], self.links[3] = anotherNode, self.links[2]
+        else:
+            self.links[3] = anotherNode
+        self.refcnt += 1
+
+    def __removeLink(self, idx):
+        if idx == 0:
+            self.links[0], self.links[1], self.links[2], self.links[3] = self.links[1], self.links[2], self.links[3], None
+        elif idx == 1:
+            self.links[1], self.links[2], self.links[3] = self.links[2], self.links[3], None
+        elif idx == 2:
+            self.links[2], self.links[3] = self.links[3], None
+        else:
+            self.links[3] = None
+        self.refcnt -= 1
+
     def __rearrangeLinks(self, a):
         """ Rearrange links when adding a new node """
         if self.valcnt != 0:            
             if a < self.min and not self.isLeafNode() and self.refcnt < 3: 
                 # shift all the links to the right when adding new in element
-                self.links.insert(0, None)
+                self.__insertLink(0, None)
             elif self.valcnt == 2 and self.refcnt == 3 and self.max > a > self.min:
                 # rearrange middle links when adding med element
-                self.links.insert(1, None)
+                self.__insertLink(1, None)
 
     def __sort3(self, arr, l):
         """ Sort 2 or 3 arrays (very rubost and fast) """
@@ -143,7 +110,7 @@ class Node(object):
 
     def removeLink(self, node):
         """ Remove link from self to another node """
-        self.links.remove(node)
+        self.__removeLink(self.getLinkIdx(node))
         return self
 
     def isConsistent(self):
@@ -180,9 +147,9 @@ class Node(object):
                     self.links[idx] = anotherNode
                 else:
                     if idx >= self.refcnt:
-                        self.links.append(anotherNode)
+                        self.__addLink(anotherNode)
                     else:
-                        self.links.insert(idx, anotherNode)
+                        self.__insertLink(idx, anotherNode)
                 anotherNode.parent = self
         return self
 
@@ -210,10 +177,6 @@ class Node(object):
     @property
     def max(self):
         return self.values[self.valcnt - 1]
-
-    @property
-    def refcnt(self):
-        return len(self.links)
 
    
 class TTTree(object):
