@@ -18,7 +18,7 @@ class Node(object):
 
     def __init__(self, v = None, parent = None):
         self.values, self.valcnt = None, 0
-        self.links, self.refcnt = [None] * 4, 0
+        self.links, self.refcnt = None, 0
         self.parent = parent
         self.insertValue(v)
 
@@ -39,10 +39,12 @@ class Node(object):
         return -1
 
     def __addLink(self, link):
+        if self.links is None: self.links = [None] * 4
         self.links[self.refcnt] = link
         self.refcnt += 1
 
     def __insertLink(self, idx, anotherNode):
+        if self.links is None: self.links = [None] * 4
         if idx == 0:
             self.links[0],self.links[1],self.links[2], self.links[3] = anotherNode,self.links[0],self.links[1], self.links[2]
         elif idx == 1:
@@ -67,10 +69,10 @@ class Node(object):
     def __rearrangeLinks(self, a):
         """ Rearrange links when adding a new node """
         if self.valcnt != 0:            
-            if a < self.min and not self.isLeafNode() and self.refcnt < 3: 
+            if a < self.values[0] and not self.isLeafNode() and self.refcnt < 3: 
                 # shift all the links to the right when adding new in element
                 self.__insertLink(0, None)
-            elif self.valcnt == 2 and self.refcnt == 3 and self.max > a > self.min:
+            elif self.valcnt == 2 and self.refcnt == 3 and self.values[self.valcnt - 1] > a > self.values[0]:
                 # rearrange middle links when adding med element
                 self.__insertLink(1, None)
 
@@ -127,21 +129,18 @@ class Node(object):
 
     def getLink(self, linkIdx):
         """ Get link by its index, return None if there is no link with such an index """
-        if linkIdx >= self.refcnt or linkIdx < 0:
-            return None
-        return self.links[linkIdx]
+        if linkIdx < self.refcnt:
+            return self.links[linkIdx]
 
     def getLinkIdx(self, destNode):
         """ Get index of the link which points to the given node """
-        try:
-            return self.links.index(destNode)
-        except ValueError:
-            return -1
+        return self.links.index(destNode)
 
     def addLink(self, anotherNode):
         """ Add link to another node """
         if anotherNode is not None:
-            idx = self.__getlink(anotherNode.min)
+            if self.links is None: self.links = [None] * 4
+            idx = self.__getlink(anotherNode.values[0])
             if idx != -1:
                 if idx < self.refcnt and self.links[idx] is None:
                     self.links[idx] = anotherNode
@@ -154,28 +153,15 @@ class Node(object):
         """ Check if node contains a given value """
         if self.valcnt is 0:
             return False
-        return False if (self.min > a or self.max < a) else (a in self.values)
+        return False if (self.values[0] > a or self.values[self.valcnt - 1] < a) else (a in self.values)
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
         idx = self.__getlink(a)
         if idx != -1 and idx < self.refcnt: 
             return self.links[idx]
-
-    @property
-    def min(self):
-        return self.values[0]
-
-    @property
-    def med(self):
-        if self.valcnt == 3:
-            return self.values[1]
-
-    @property
-    def max(self):
-        return self.values[self.valcnt - 1]
-
-   
+  
+ 
 class TTTree(object):
 
     def __init__(self):
@@ -272,27 +258,27 @@ class TTTree(object):
                         # left and right case
                         if parent.valcnt == 1:
                             if node == parent.getLink(0):
-                                parent_val, sib_val = parent.min, sib.min
+                                parent_val, sib_val = parent.values[0], sib.values[0]
                                 child = sib.chooseChild(sib_val - 1)
-                            elif node == parent.getLink(1):
-                                parent_val, sib_val = parent.max, sib.max
+                            elif node == parent.getLink(1):                                
+                                parent_val, sib_val = parent.values[parent.valcnt - 1], sib.values[sib.valcnt - 1]
                                 child = sib.chooseChild(sib_val + 1)  
                         else:
                             if sib == parent.getLink(1):
                                 # left
                                 if node == parent.getLink(0):
-                                    parent_val, sib_val = parent.min, sib.min
+                                    parent_val, sib_val = parent.values[0], sib.values[0]
                                     child = sib.chooseChild(sib_val - 1)
                                 # right
-                                elif node == parent.getLink(2):                                    
-                                    parent_val, sib_val = parent.max, sib.max
+                                elif node == parent.getLink(2):
+                                    parent_val, sib_val = parent.values[parent.valcnt - 1], sib.values[sib.valcnt - 1]
                                     child = sib.chooseChild(sib_val + 1)
                             # middle
                             elif sib == parent.getLink(2):
-                                parent_val, sib_val = parent.max, sib.min
+                                parent_val, sib_val = parent.values[parent.valcnt - 1], sib.values[0]
                                 child = sib.chooseChild(sib_val - 1)
                             elif sib == parent.getLink(0):
-                                parent_val, sib_val = parent.min, sib.max
+                                parent_val, sib_val = parent.values[0], sib.values[sib.valcnt - 1]
                                 child = sib.chooseChild(sib_val + 1)
 
                         node.insertValue(parent_val)
@@ -313,12 +299,12 @@ class TTTree(object):
                             parent_val = parent.values[0]
                         else:                            
                             if sib == parent.getLink(0):
-                                parent_val = parent.min
+                                parent_val = parent.values[0]
                             elif sib == parent.getLink(1):
                                 if sib == rS:
-                                    parent_val = parent.min
+                                    parent_val = parent.values[0]
                                 if sib == lS:
-                                    parent_val = parent.max
+                                    parent_val = parent.values[parent.valcnt - 1]
 
                         child = node.getLink(0)
 
@@ -342,24 +328,24 @@ class TTTree(object):
             # conflict detected, try to resolve it
             if node.isLeafNode() and node is not self.root:
                 # case for leaf node
-                node.parent.insertValue(node.med)
+                node.parent.insertValue(node.values[1])
                 node.parent.removeLink(node)
                 # split the node
-                node.parent.addLink(Node(node.min, node.parent))
-                node.parent.addLink(Node(node.max, node.parent))
+                node.parent.addLink(Node(node.values[0], node.parent))
+                node.parent.addLink(Node(node.values[node.valcnt - 1], node.parent))
                 self.__fixNodeInsert(node.parent)
             else:
                 # case for internal node or root node 
                 if node is not self.root:
-                    node.parent.insertValue(node.med)
+                    node.parent.insertValue(node.values[1])
                     node.parent.removeLink(node)
                     parent = node.parent
                 else:
-                    self.root = Node(node.med)
+                    self.root = Node(node.values[1])
                     parent = self.root
 
                 # split the node
-                leftNode, rightNode = Node(node.min, parent), Node(node.max, parent)
+                leftNode, rightNode = Node(node.values[0], parent), Node(node.values[node.valcnt - 1], parent)
                 parent.addLink(leftNode).addLink(rightNode)
                 leftNode.addLink(node.getLink(0)).addLink(node.getLink(1))
                 rightNode.addLink(node.getLink(2)).addLink(node.getLink(3))
@@ -412,7 +398,7 @@ class TTTree(object):
             return None
         # swap the value we want to delete with its inorder successor (always leaf)
         succ = self.findInorderSucc(node, a)
-        self.__swapValues(node, a, succ, succ.min)
+        self.__swapValues(node, a, succ, succ.values[0])
         # delete leaf node value
         succ.removeValue(a)
         # fix tree if needed
