@@ -24,10 +24,12 @@ class Node(object):
 
     def __str__(self):
         out = []
-        for v in self.values:
-            if v is not None:
-                out.append(' %s ' % str(v))
-        return ''.join(out) 
+        if self.values is not None:        
+            for v in self.values:
+                if v is not None:
+                    out.append(' %s ' % str(v))
+            return ''.join(out)
+        else: return 'empty' 
 
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
@@ -167,6 +169,14 @@ class TTTree(object):
     def __init__(self):
         self.root = Node()
         self.lastSearchDepth = 0
+
+    def __iter__(self):
+        stack = [self.root]
+        while len(stack):
+            node = stack.pop()
+            yield node    
+            for j in xrange(node.refcnt - 1, -1, -1):
+                stack.append(node.getLink(j))
 
     def __str__(self):
         """ String representation of a tree (parentheses form) """
