@@ -5,7 +5,7 @@
 from tttree import TTTree
 import random, time
 
-ITEMS = 100000
+ITEMS = 10000
 RANDMAX = 1000000
 
 
