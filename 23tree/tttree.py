@@ -146,10 +146,7 @@ class Node(object):
                 if idx < self.refcnt and self.links[idx] is None:
                     self.links[idx] = anotherNode
                 else:
-                    if idx >= self.refcnt:
-                        self.__addLink(anotherNode)
-                    else:
-                        self.__insertLink(idx, anotherNode)
+                    self.__insertLink(idx, anotherNode)
                 anotherNode.parent = self
         return self
 
