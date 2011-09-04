@@ -3,9 +3,10 @@
 # simple set of tests for 2-3 tree
 
 from tttree import TTTree
-import random, time
+import random, time, pstats
+import cProfile
 
-ITEMS = 10000
+ITEMS = 100000
 RANDMAX = 1000000
 
 
@@ -26,10 +27,10 @@ def insertTest(tree, items):
 @timer
 def consTest(tree, items): 
     print 'test 2 - checking consistency of %d elements...' % len(items)
-    tree.findInorderSucc(tree.root, tree.root.min)
+    tree.findInorderSucc(tree.root, tree.root.values[0])
     maxDepth = tree.lastSearchDepth
     for j in items:
-        assert(tree.contains(j))
+        assert(tree.contains(j))        
         assert(tree.lastSearchDepth <= maxDepth)
 
 @timer
@@ -49,6 +50,7 @@ for x in xrange(5):
         val = random.randint(0, RANDMAX)
         if val not in items: items.add(val)
     print 'done'
+#    cProfile.runctx('insertTest(tree, items)', globals(), locals())
     ins.append(insertTest(tree, items))
     cons.append(consTest(tree, items))
     print 'shuffling...'
