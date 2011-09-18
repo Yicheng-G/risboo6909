@@ -163,6 +163,8 @@ class Node(object):
         if 0 <= idx < self.refcnt: 
             return self.links[idx]
   
+
+from collections import deque
  
 class TTTree(object):
 
@@ -171,13 +173,26 @@ class TTTree(object):
         self.lastSearchDepth = 0
 
     def __iter__(self):
-        stack = [self.root]
-        while len(stack):
+#        stack = [self.root]
+#        node = stack[0]
+        stack, node = deque([]), self.root
+        while True:
+            while node.links is not None:
+             #   print '*', node
+                stack.appendleft( node )
+                node = node.links[0]
+            #    print '+', node
+            while node.links is not None:
+                stack.appendleft( node )
+                node = node.links[1]
+            while  node.links is not None:
+                stack.appendleft( node )
+                node = node.links[2]
+ #           print stack
+            yield node
             node = stack.pop()
-            yield node    
-            for j in xrange(node.refcnt - 1, -1, -1):
-                stack.append(node.getLink(j))
-
+#            print stack
+                           
     def __str__(self):
         """ String representation of a tree (parentheses form) """
         out, stack = [], [self.root]
@@ -420,4 +435,10 @@ class TTTree(object):
        """ Deletes a list of values from a tree """ 
        if xs is not None and type(xs) is list:
             for item in xs: self.removeValue(item)
+
+t = TTTree()
+t.insertList(['c','d','b','a','g','h'])
+#print t
+for item in t:
+    if item is not None: print item
 
