@@ -14,6 +14,43 @@
 
 """
 
+class Pair(object):
+
+    # use this class if associative tree (or map) is needed
+    # over 2-3 tree
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def __lt__(self, other):
+        if type(other) is Pair:
+            return self.key < other.key
+        else:
+            return self.key < other
+
+    def __gt__(self, other):
+        if type(other) is Pair:
+            return self.key > other.key
+        else:
+            return self.key > other
+
+    def __eq__(self, other):
+        if type(other) is Pair:
+            return self.key == other.key
+        else:
+            return self.key == other
+
+    def __str__(self):
+        return 'key: %s, value: %s' % (str(self.key), str(self.value))
+
+    def key(self):
+        return self.key
+
+    def val(self):
+        return self.value
+
+
 class Node(object):
 
     def __init__(self, v = None, parent = None):
@@ -163,7 +200,12 @@ class Node(object):
         if 0 <= idx < self.refcnt: 
             return self.links[idx]
   
- 
+    def getItem(self, a):
+        if self.contains(a):
+            return self.values[self.values.index(a)]
+        return None
+
+
 class TTTree(object):
 
     def __init__(self):
