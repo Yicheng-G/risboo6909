@@ -1,3 +1,37 @@
-import tttree
+# Sparse matrix class based on 2-3 trees
 
- 
+from tttree import TTTree, Pair
+
+class SparseMatrix:
+
+    def __init__(self, dim, defaultVal = 0):
+        self.dim = dim
+        self.defVal = defaultVal
+        self.trunk = TTTree()
+        self.getidx = []
+
+    def __indexFunc(self, idx):
+        linearIdx = idx[0]
+        if len(idx) > 1:
+            for i in xrange(1, len(self.dim)):
+                linearIdx += reduce(lambda x, y: x * y, self.dim[:i]) * idx[i]
+        return linearIdx
+
+    def __getitem__(self, idx):
+        self.getidx.append(idx)
+        if len(self.getidx) == len(self.dim):
+            linidx = self.__indexFunc(self.getidx)
+            node = self.trunk.contains(linidx)
+            if node:
+                return node.getItem(linidx).val()
+            self.getidx = []
+            return self.defVal
+        return self 
+    
+    def setitem(self, idxlst, val):
+        if len(idxlst) == len(self.dim):
+            linidx = self.__indexFunc(idxlst)
+            self.trunk.insertValue(Pair(linidx, val))
+        return self        
+    
+
