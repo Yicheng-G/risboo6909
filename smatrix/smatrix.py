@@ -9,12 +9,16 @@ class SparseMatrix:
         self.defVal = defaultVal
         self.trunk = TTTree()
         self.getidx = []
+        self.maxIdx = self.__indexFunc(map(lambda x: x - 1, self.dim))
 
     def __indexFunc(self, idx):
         linearIdx = idx[0]
         if len(idx) > 1:
             for i in xrange(1, len(self.dim)):
-                linearIdx += reduce(lambda x, y: x * y, self.dim[:i]) * idx[i]
+                linearIdx += reduce(lambda x, y: x * y, self.dim[:i]) * idx[i]       
+        # check bounds
+        if 'maxIdx' in self.__dict__ and linearIdx > self.maxIdx:
+            print 'Index out of bounds!'
         return linearIdx
 
     def __getitem__(self, idx):
@@ -29,8 +33,11 @@ class SparseMatrix:
         return self
     
     def setitem(self, idxlst, val):
-        if len(idxlst) == len(self.dim):
+        if len(idxlst) == len(self.dim):            
             linidx = self.__indexFunc(idxlst)
             self.trunk.insertValue(Pair(linidx, val))
-        return self 
+        return self
+  
+    def __str__(self):
+        return str(self.trunk)
 
