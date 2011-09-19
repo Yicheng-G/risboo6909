@@ -26,12 +26,11 @@ class SparseMatrix:
                 return node.getItem(linidx).val()
             self.getidx = []
             return self.defVal
-        return self 
+        return self
     
     def setitem(self, idxlst, val):
         if len(idxlst) == len(self.dim):
             linidx = self.__indexFunc(idxlst)
             self.trunk.insertValue(Pair(linidx, val))
-        return self        
-    
+        return self 
 
