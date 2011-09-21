@@ -26,9 +26,9 @@ class SparseMatrix:
         if len(self.getidx) == len(self.dim):
             linidx = self.__indexFunc(self.getidx)
             node = self.trunk.contains(linidx)
+            self.getidx = []
             if node:
                 return node.getItem(linidx).val()
-            self.getidx = []
             return self.defVal
         return self
     
@@ -37,6 +37,9 @@ class SparseMatrix:
             linidx = self.__indexFunc(idxlst)
             self.trunk.insertValue(Pair(linidx, val))
         return self
+
+    def size(self):
+        return self.dim
   
     def __str__(self):
         return str(self.trunk)
