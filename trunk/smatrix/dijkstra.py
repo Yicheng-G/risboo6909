@@ -6,8 +6,24 @@ from smatrix import SparseMatrix
 INF = 10 ** 5
 
 def getNeighbours(M, pointIdx):
-    for i in xrange(M.size()[0]):
-        if M[pointIdx][i] != -1: yield i
+    tmp = []
+    for i in xrange(M.size()[1]):
+        if M[pointIdx][i] != -1:           
+            tmp.append((M[pointIdx][i], i))
+    tmp = sorted(tmp, key = lambda x: x[0], reverse = True)
+    return tmp
+
+def recursiveStep(lst, visited, M):
+    while lst:
+        item = lst.pop()
+        weight, node = item
+        if node in visited:
+            continue
+        if M[node][node] is INF or M[node][node] > weight:
+            print 'set %s to %s' % (str(node), str(weight))
+            M.setitem([node, node], weight)
+            print '---'
+            recursiveStep(getNeighbours(M, node), visited + [node], M)
 
 def dijkstraAlgorithm(M, startPoint):
     # make all the nodes weights equal to infinity first
@@ -18,9 +34,8 @@ def dijkstraAlgorithm(M, startPoint):
     # fill diagonal with INFs (initial distances)
     for i in xrange(rows):
         M.setitem([i, i], INF)
-    # from - is a row of a matrix, to - is a column of a matrix
-    for node in getNeighbours(M, startPoint):
-        print '*', node
+    # from - is a column of a matrix, to - is a row of a matrix
+    recursiveStep(getNeighbours(M, startPoint), [startPoint], M)
 
 # test case
 M = SparseMatrix(dim = [6, 6], defaultVal = -1)
@@ -45,6 +60,8 @@ M.setitem([3, 1], 15)
 M.setitem([4, 2], 6)
 M.setitem([2, 4], 6)
 
+print M
 
 dijkstraAlgorithm(M, 0)
 
+print M

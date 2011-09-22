@@ -37,9 +37,9 @@ class Pair(object):
 
     def __eq__(self, other):
         if type(other) is Pair:
-            return self.key == other.key
-        else:
-            return self.key == other
+            return self.key == other.key and self.value == other.value
+        print 'zz'
+        return None
 
     def __str__(self):
         return 'key: %s, value: %s' % (str(self.key), str(self.value))
