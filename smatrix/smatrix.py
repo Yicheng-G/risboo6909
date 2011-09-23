@@ -35,7 +35,8 @@ class SparseMatrix:
     def setitem(self, idxlst, val):
         if len(idxlst) == len(self.dim):            
             linidx = self.__indexFunc(idxlst)
-            self.trunk.insertValue(Pair(linidx, val))
+            res = self.trunk.insertValue(Pair(linidx, val))
+            if type(res) is Pair: res.value = val
         return self
 
     def size(self):
