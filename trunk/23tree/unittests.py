@@ -3,11 +3,11 @@
 # simple set of tests for 2-3 tree
 
 from tttree import TTTree
-import random, time, pstats
-import cProfile
+import random, time
+#import cProfile
 
-ITEMS = 100000
-RANDMAX = 1000000
+ITEMS = 1000000
+RANDMAX = 10000000000
 
 
 def timer(f):

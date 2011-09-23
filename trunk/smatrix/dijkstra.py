@@ -20,9 +20,10 @@ def recursiveStep(lst, visited, M):
         if node in visited:
             continue
         if M[node][node] is INF or M[node][node] > weight:
-            print 'set %s to %s' % (str(node), str(weight))
-            M.setitem([node, node], weight)
-            print '---'
+            old_weight = 0
+            if M[node][node] is not INF:
+                old_weight = M[node][node]
+            M.setitem([node, node], old_weight + weight)
             recursiveStep(getNeighbours(M, node), visited + [node], M)
 
 def dijkstraAlgorithm(M, startPoint):
@@ -60,8 +61,7 @@ M.setitem([3, 1], 15)
 M.setitem([4, 2], 6)
 M.setitem([2, 4], 6)
 
-print M
-
 dijkstraAlgorithm(M, 0)
 
 print M
+

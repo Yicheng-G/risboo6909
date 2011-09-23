@@ -38,8 +38,9 @@ class Pair(object):
     def __eq__(self, other):
         if type(other) is Pair:
             return self.key == other.key
-        else:
+        else:            
             return self.key == other
+        return None
 
     def __str__(self):
         return 'key: %s, value: %s' % (str(self.key), str(self.value))
@@ -191,8 +192,9 @@ class Node(object):
     def contains(self, a):
         """ Check if node contains a given value """
         if self.valcnt is not 0:
-            return False if (self.values[0] > a or self.values[self.valcnt - 1] < a) else (a in self.values)
-        return False
+            if (self.values[0] > a or self.values[self.valcnt - 1] < a) or a not in self.values:
+                return None            
+            return self.values[self.values.index(a)]
 
     def chooseChild(self, a):
         """ Choose where to go according to the value a """
@@ -432,8 +434,8 @@ class TTTree(object):
             self.root = Node(a)
         elif a is not None:
             node = self.findNode(a)
-            if node.contains(a):
-                return None
+            res = node.contains(a)
+            if res:  return res
             # try to insert a new value into existing node
             node.insertValue(a)
             self.__fixNodeInsert(node)
