@@ -69,6 +69,10 @@ class Node(object):
             return ''.join(out)
         else: return 'empty' 
 
+    def __iter__(self):
+        for item in self.values:
+            yield item
+
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
             if idx is 0: 
