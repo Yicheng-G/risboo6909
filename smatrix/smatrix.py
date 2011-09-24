@@ -12,6 +12,7 @@ class SparseMatrix:
         self.maxIdx = self.__indexFunc(map(lambda x: x - 1, self.dim))
 
     def __indexFunc(self, idx):
+        # returns linear index by the given n-d index
         linearIdx = idx[0]
         if len(idx) > 1:
             for i in xrange(1, len(self.dim)):
@@ -20,6 +21,17 @@ class SparseMatrix:
         if 'maxIdx' in self.__dict__ and linearIdx > self.maxIdx:
             print 'Index out of bounds!'
         return linearIdx
+
+    def __invIndexFunc(self, idx):
+        # returns n-d index by the given linear index
+        output = [0] * len(self.dim)
+        for i in xrange(len(self.dim) - 1, 0, -1):
+            divisor = reduce(lambda x, y: x * y, self.dim[:i])
+            result = idx / divisor
+            idx -= result * divisor
+            output[i] = result
+        output[0] = idx
+        return output
 
     def __getitem__(self, idx):
         self.getidx.append(idx)
@@ -43,5 +55,10 @@ class SparseMatrix:
         return self.dim
   
     def __str__(self):
-        return str(self.trunk)
+        buf = []
+        for node in self.trunk:
+            for pair in node:
+                if pair is not None: 
+                    buf.append('%s: %s' % (self.__invIndexFunc(pair.key), pair.value))
+        return ', '.join(buf)
 
