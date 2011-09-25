@@ -70,8 +70,9 @@ class Node(object):
         else: return 'empty' 
 
     def __iter__(self):
-        for item in self.values:
-            yield item
+        if self.values is not None:
+            for item in self.values:
+                yield item
 
     def __getlink(self, a):
         for idx in xrange(self.valcnt):
