@@ -6,6 +6,7 @@ import pyevolve
 import copy_reg
 import types
 import time
+
 from multiprocessing import Pool
 from pyevolve import G1DList
 from pyevolve import GSimpleGA
@@ -34,6 +35,7 @@ class Population(object):
     def __init__(self):
         self.funclist = []
         self.funccnt = 0
+        self.score_func = None
 
     def setFuncList(self, funclist):
         self.funclist = funclist
@@ -48,12 +50,18 @@ class Population(object):
     def getMaxSpecies(self):
         return self.maxSpecies
 
+    def setScoreF(self, f):
+        self.score_func = f
+
     def setFitness(self):
         pass
 
     def start(self):
-        print "Boris"
-
+        genome = G1DList.G1DList(self.getMaxSpecies())
+        genome.setParams(rangemin = 0, rangemax = self.getFuncCnt() - 1)
+        genome.evaluator.set(self.score_func)
+        ga = GSimpleGA.GSimpleGA(genome, interactiveMode = False)
+        ga.evolve(freq_stats = 10)
 
 class GAWrapper(object):
 
@@ -68,7 +76,7 @@ class GAWrapper(object):
     def startAll(self):
         results = []
         for pop in self.populations: 
-            maxVal = pop.getFuncCnt()
-            maxSpec = pop.getMaxSpecies()
             results.append(self.pool.apply_async(pop.start))
-        time.sleep(2)    
+        for res in results:
+            res.wait()
+
