@@ -2,8 +2,22 @@
     blocks. This class defines an appropriate yet structure for it and simple program evaluator.
 """
 
+import random
+import time
 from funclib import *
 
+def timeit(method):
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        print '%r %2.2f sec' % \
+              (method.__name__, te-ts)
+        return result
+
+    return timed
 
 class Node(object):
 
@@ -90,12 +104,27 @@ class Node(object):
         return self.toString()
 
 
-def prodRandomAlg():
-
+def serialize(root):
+    """ Serialize algorithm starting from any node """
     pass
 
-#root = Node(mul, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])])
-root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
-print root
+def __prodRandomAlg(funclist, level = 1, maxDepth = 3):
+    """ Generate random algorithm with the given depth """
+    if level > maxDepth:
+        return []
+    rndfunc = funclist[random.randint(0, len(funclist) - 1)]
+    arglst = []
+    for idx in xrange(rndfunc.argcnt):
+        arglst.append(__prodRandomAlg(funclist, level + 1, maxDepth))
+    node = Node(rndfunc, arglst)
+    return node
 
-print root._eval([20, 1])
+@timeit
+def prodRandomAlg(funclist, maxDepth = 3):
+    return __prodRandomAlg(funclist, 1, maxDepth)
+
+#root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
+root = prodRandomAlg([add, sub, inc, dec, mul, div], 30)
+#print root
+
+#print root._eval([20, 1])
