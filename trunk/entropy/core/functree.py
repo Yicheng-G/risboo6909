@@ -8,7 +8,7 @@ import random
 import time
 import pickle
 
-verbose = True
+verbose = False 
 
 def timeit(method):
 
@@ -23,6 +23,14 @@ def timeit(method):
         return result
 
     return timed
+
+class UnexpectedEvalError(Exception):
+
+    def __init__(self, value):
+        self.parameter = value
+
+    def __str__(self):
+        return repr(self.parameter)
 
 class Node(object):
 
@@ -71,8 +79,9 @@ class Node(object):
                 # substitute value
                 res = inp.pop(0)
         if res is None:
-            print 'Unexpected error!'
-            exit(0)
+            if verbose:
+                print 'Unexpected error!'
+            raise UnexpetedEvalError()
         return res
 
     def _eval(self, inp):
@@ -133,26 +142,44 @@ def load(filename = "default.dat"):
         print 'done!'
     return root 
 
-def __prodRandomAlg(funclist, level = 1, maxDepth = 3):
+def traverse(cur_node):
+    Q = [cur_node]
+    while Q:
+        cur_node = Q.pop(0)
+        yield(cur_node)
+        if type(cur_node) is Node and cur_node.children:
+            tmp = [child for child in cur_node.listChildren()]
+            Q.extend(tmp)
+
+def __prodRandomAlg(funclist, inputs, level, maxDepth):
     """ Generate random algorithm with the given depth """
     if level > maxDepth:
+        if not random.randint(0, 1):
+            return random.uniform(0, 1)
+        inputs[0] += 1
         return []
     rndfunc = funclist[random.randint(0, len(funclist) - 1)]
     arglst = []
     for idx in xrange(rndfunc.argcnt):
-        arglst.append(__prodRandomAlg(funclist, level + 1, maxDepth))
+        arglst.append(__prodRandomAlg(funclist, inputs, level + 1, maxDepth))
     node = Node(rndfunc, arglst)
     return node
 
-@timeit
+#@timeit
 def prodRandomAlg(funclist, maxDepth = 3):
     if verbose:
         print 'Generating algorithm with maxdepth = %d' % maxDepth
-    res = __prodRandomAlg(funclist, 1, maxDepth)
+    random.seed()
+    inputs = [0]
+    res  = __prodRandomAlg(funclist, inputs, 1, maxDepth)
     if verbose:
         print 'done!'
-    return res
+    return res, inputs[0]
 
 #root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
-#root = prodRandomAlg([add, sub, inc, dec, mul, div], 20)
+#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div], 3)
+#save(root, 'algtest')
+#root  = load('pop1.dat')
+#print root
+#print root._eval([6, 6])
 

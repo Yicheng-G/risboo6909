@@ -2,14 +2,12 @@
     and more convenient usage.
 """
 
-import pyevolve
 import copy_reg
 import types
 import time
 
 from multiprocessing import Pool
-from pyevolve import G1DList
-from pyevolve import GSimpleGA
+from gaengine import GAInstance
 from funclib import *
 
 def _pickle_method(method):
@@ -30,19 +28,57 @@ def _unpickle_method(func_name, obj, cls):
 
 copy_reg.pickle(types.MethodType, _pickle_method, _unpickle_method)
 
+
 class Population(object):
 
     def __init__(self):
         self.funclist = []
         self.funccnt = 0
         self.score_func = None
+        self.maxGen = -1
+        self.mutateRate = 0.3
+        self.stopAfterGen = 1000
+        self.filename = 'default.dat'
+
+    def setStopAfter(self, n):
+        self.stopAfterGen = n
+
+    def getStopAfter(self):
+        return self.stopAfterGen
+
+    def setFileName(self, filename):
+        self.filename = filename
+
+    def getFileName(self):
+        return self.filename 
 
     def setFuncList(self, funclist):
         self.funclist = funclist
         self.funccnt = len(self.funclist)
 
+    def getFuncList(self):
+        return self.funclist
+
     def getFuncCnt(self):
         return self.funccnt
+
+    def setMutateRate(self, n):
+        self.mutateRate = n
+
+    def getMutateRate(self):
+        return self.mutateRate
+
+    def setReportRate(self, n):
+        self.reportRate = n 
+
+    def getReportRate(self):
+        return self.reportRate
+
+    def setMaxAlgSize(self, n):
+        self.maxAlgSize = n
+
+    def getMaxAlgSize(self):
+        return self.maxAlgSize
 
     def setMaxSpecies(self, n):
         self.maxSpecies = n
@@ -50,18 +86,27 @@ class Population(object):
     def getMaxSpecies(self):
         return self.maxSpecies
 
+    def setArgsReq(self, n):
+        self.argsReq = n
+
+    def getArgsReq(self):
+        return self.argsReq
+
+    def setMaxGen(self, n):
+        self.maxGen = n
+
+    def getMaxGen(self):
+        return self.maxGen
+
     def setScoreF(self, f):
         self.score_func = f
 
-    def setFitness(self):
-        pass
+    def getScoreF(self):
+        return self.score_func
 
     def start(self):
-        genome = G1DList.G1DList(self.getMaxSpecies())
-        genome.setParams(rangemin = 0, rangemax = self.getFuncCnt() - 1)
-        genome.evaluator.set(self.score_func)
-        ga = GSimpleGA.GSimpleGA(genome, interactiveMode = False)
-        ga.evolve(freq_stats = 10)
+        ga = GAInstance(self)
+        ga.evolve(self.getMaxGen())
 
 class GAWrapper(object):
 

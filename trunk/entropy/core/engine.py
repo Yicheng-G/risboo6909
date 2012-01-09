@@ -3,16 +3,27 @@
 from gawrapper import GAWrapper, Population
 from funclib import *
 
-def test(chromosome):
-    return sum(chromosome)
+def score(alg):
+    pts = 50
+    try:
+        for x in xrange(0, 50):
+            if alg[0]._eval([x, x]) == (x * x + 2 * x): pts -= 1
+    except:
+        pass
+    return pts
 
 engine = GAWrapper()
 
 # first of all - create and init a new population
 pop1 = Population()
-pop1.setFuncList([inc, dec])
-pop1.setMaxSpecies(20)
-pop1.setScoreF(test)
+pop1.setFuncList([inc, dec, add, sub, mul, ident])
+pop1.setArgsReq(2)
+pop1.setMaxSpecies(30)
+pop1.setMaxAlgSize(5)
+pop1.setReportRate(100)
+pop1.setMaxGen(-1)
+pop1.setScoreF(score)
+pop1.setFileName('pop1.dat')
 
 # add population to engine
 engine.addPopulation(pop1)
