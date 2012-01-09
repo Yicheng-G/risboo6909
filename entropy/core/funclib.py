@@ -1,5 +1,6 @@
 """ Basic functions library for functions tree """
 
+
 class FunctionWrapper(object):
 
     def __init__(self, f):
@@ -10,44 +11,44 @@ class FunctionWrapper(object):
     def __call__(self, *args, **kwargs):
         return self.f(*args, **kwargs)
 
-@FunctionWrapper
-def ident(a):
+def _ident(a):
     # identity function
     return a
+ident = FunctionWrapper(_ident)
 
-@FunctionWrapper
-def inc(a):
+def _inc(a):
     return a + 1
+inc = FunctionWrapper(_inc)
 
-@FunctionWrapper
-def dec(a):
+def _dec(a):
     return a - 1
+dec = FunctionWrapper(_dec)
 
-@FunctionWrapper
-def add(a, b):
+def _add(a, b):
     return a + b
+add = FunctionWrapper(_add)
 
-@FunctionWrapper
-def sub(a, b):
+def _sub(a, b):
     return a - b
+sub = FunctionWrapper(_sub)
 
-@FunctionWrapper
-def mul(a, b):
+def _mul(a, b):
     return a * b
+mul = FunctionWrapper(_mul)
 
-@FunctionWrapper
-def div(a, b):
+def _div(a, b):
     return a / b
+div = FunctionWrapper(_div)
 
-@FunctionWrapper
-def gt(a, b):
+def _gt(a, b):
     return a > b
+gt = FunctionWrapper(_gt)
 
-@FunctionWrapper
-def lt(a, b):
+def _lt(a, b):
     return a < b
+lt = FunctionWrapper(_lt)
 
-@FunctionWrapper
-def compare(comparator, pos = 0, neg = 0):
+def _compare(comparator, pos = 0, neg = 0):
     pass
+compare = FunctionWrapper(_compare)
 
