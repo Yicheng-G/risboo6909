@@ -154,5 +154,5 @@ def prodRandomAlg(funclist, maxDepth = 3):
     return res
 
 #root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
-root = prodRandomAlg([add, sub, inc, dec, mul, div], 20)
+#root = prodRandomAlg([add, sub, inc, dec, mul, div], 20)
 

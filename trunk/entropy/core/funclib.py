@@ -1,6 +1,5 @@
 """ Basic functions library for functions tree """
 
-
 class FunctionWrapper(object):
 
     def __init__(self, f):
