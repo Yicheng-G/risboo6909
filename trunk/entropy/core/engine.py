@@ -7,7 +7,7 @@ def score(alg):
     pts = 50
     try:
         for x in xrange(0, 50):
-            if alg[0]._eval([x, x]) == (x * x + 2 * x): pts -= 1
+            if alg[0]._eval([x, x]) == (x ** 3): pts -= 1
     except:
         pass
     return pts

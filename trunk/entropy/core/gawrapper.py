@@ -37,7 +37,7 @@ class Population(object):
         self.score_func = None
         self.maxGen = -1
         self.mutateRate = 0.3
-        self.stopAfterGen = 1000
+        self.stopAfterGen = 10000
         self.filename = 'default.dat'
 
     def setStopAfter(self, n):

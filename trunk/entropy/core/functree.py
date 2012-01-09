@@ -181,5 +181,5 @@ def prodRandomAlg(funclist, maxDepth = 3):
 #save(root, 'algtest')
 #root  = load('pop1.dat')
 #print root
-#print root._eval([6, 6])
+#print root._eval([2, 3])
 
