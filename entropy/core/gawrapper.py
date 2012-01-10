@@ -37,7 +37,8 @@ class Population(object):
         self.score_func = None
         self.maxGen = -1
         self.mutateRate = 0.3
-        self.stopAfterGen = 10000
+        self.crossoverRate = 0.2
+        self.stopAfterGen = 1000
         self.filename = 'default.dat'
 
     def setStopAfter(self, n):
@@ -61,6 +62,12 @@ class Population(object):
 
     def getFuncCnt(self):
         return self.funccnt
+
+    def setCrossoverRate(self, n):
+        self.crossoverRate = n
+
+    def getCrossoverRate(self):
+        return self.crossoverRate
 
     def setMutateRate(self, n):
         self.mutateRate = n
