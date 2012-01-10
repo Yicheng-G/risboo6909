@@ -36,8 +36,8 @@ class Population(object):
         self.funccnt = 0
         self.score_func = None
         self.maxGen = -1
-        self.mutateRate = 0.3
-        self.crossoverRate = 0.2
+        self.mutateRate = 0.1
+        self.crossoverRate = 0.1
         self.stopAfterGen = 1000
         self.filename = 'default.dat'
 

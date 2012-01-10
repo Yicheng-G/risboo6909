@@ -7,7 +7,7 @@ def score(alg):
     pts = 50
     try:
         for x in xrange(0, 50):
-            if alg[0]._eval([x,x,x]) == (x ** 3 + 3): pts -= 1
+            if alg[0]._eval([x]) == (x + x): pts -= 1
     except:
         pass
     return pts
@@ -17,7 +17,7 @@ engine = GAWrapper()
 # first of all - create and init a new population
 pop1 = Population()
 pop1.setFuncList([inc, dec, add, sub, mul, ident])
-pop1.setArgsReq(3)
+pop1.setArgsReq(1)
 pop1.setMaxSpecies(30)
 pop1.setMaxAlgSize(7)
 pop1.setReportRate(100)
