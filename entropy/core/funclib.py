@@ -48,6 +48,24 @@ def _lt(a, b):
 lt = FunctionWrapper(_lt)
 
 def _compare(comparator, pos = 0, neg = 0):
+    # this is just a dummy function for comparison, parameters pos and neg are not to pass any value, instead
+    # they only needed for _compare to have two possible branches to continue execution whether the result of comparison
+    # is positive or negative
     pass
 compare = FunctionWrapper(_compare)
+
+def _loop(label):
+    # label is index of node to loop
+    pass
+loop = FunctionWrapper(_loop)
+
+def _push(a):
+    # push value into stack
+    pass
+push = FunctionWrapper(_push)
+
+def _pop(pushval = 0, codebranch = 1):
+    # pop value from stack (LIFO order) 
+    pass
+pop = FunctionWrapper(_pop)
 
