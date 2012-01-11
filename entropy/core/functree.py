@@ -73,7 +73,7 @@ class Node(object):
         if type(node) is Node:
             res = node._eval(inp)
         else:
-            if node:
+            if node is not None:
                 res = node
             elif len(inp) > 0:
                 # substitute value
@@ -81,21 +81,15 @@ class Node(object):
         if res is None:
             if verbose:
                 print 'Unexpected error!'
-            raise UnexpetedEvalError()
+            raise UnexpectedEvalError()
         return res
 
     def _eval(self, inp):
-
         # evaluate if we have any children for this node
-
         if self.children:
-            
             args = []
-
-            if self.func.name == 'compare':
-
+            if self.func.name == '_compare':
                 # special behaviour for comparison
-
                 if self.__evalNext(self.children[0], inp):
                     return self.__evalNext(self.children[1], inp)
                 else:
@@ -176,10 +170,11 @@ def prodRandomAlg(funclist, maxDepth = 3):
         print 'done!'
     return res, inputs[0]
 
+#root = Node(compare, [Node(mul, [1, 1]), 1, 2])
 #root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
 #root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div], 3)
 #save(root, 'algtest')
 #root  = load('pop1.dat')
 #print root
-#print root._eval([2, 3])
+#print root._eval([])
 
