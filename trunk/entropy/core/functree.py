@@ -40,6 +40,7 @@ class Node(object):
 
         self.children = []
         self.setFunc(f)
+
         if values:
             for node in values:
                 if type(node) is Node:
@@ -87,30 +88,32 @@ class Node(object):
     def _eval(self, inp):
         # evaluate if we have any children for this node
         if self.children:
+
             args = []
 
-            if self.func.name == '_push':
-                self.__evalNext(self.children[0], inp):
-                program_stack.append(*args)
-                return args
-
-            elif self.func.name == '_compare':
+            if self.func.name == '_compare':
                 # special behaviour for comparison
                 if self.__evalNext(self.children[0], inp):
                     return self.__evalNext(self.children[1], inp)
                 else:
                     return self.__evalNext(self.children[2], inp)
+
             else:
 
                 for child in self.listChildren():
                     res = self.__evalNext(child, inp)
                     args.append(res)
 
-                elif self.func.name == '_pop':
-                    if program_stack:
-                        return program_stack.pop(len(program_stack) - 1)
-                    else:
-                        return 0
+            if self.func.name == '_push':
+                self.__evalNext(self.children[0], inp)
+                program_stack.append(*args)
+                return args
+
+            elif self.func.name == '_pop':
+                if program_stack:
+                    return program_stack.pop(len(program_stack) - 1)
+                else:
+                    return 0
 
                 return self.func(*args)
         else:
@@ -183,11 +186,11 @@ def prodRandomAlg(funclist, maxDepth = 3):
         print 'done!'
     return res, inputs[0]
 
-root = Node(pop, [Node(push, [10])])
+#root = Node(pop, [Node(push, [10])])
 #root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
-#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare], 3)
+root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop], 4)
 #save(root, 'algtest')
 #root  = load('pop1.dat')
 print root
-print root._eval([])
+#print root._eval([])
 
