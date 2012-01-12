@@ -54,7 +54,10 @@ def _compare(comparator, pos = 0, neg = 0):
     pass
 compare = FunctionWrapper(_compare)
 
-def _loop(label):
+def _goto(label):
+    pass
+
+def _loop(loop_to):
     # label is index of node to loop
     pass
 loop = FunctionWrapper(_loop)
@@ -64,7 +67,7 @@ def _push(a):
     pass
 push = FunctionWrapper(_push)
 
-def _pop(pushval = 0, codebranch = 1):
+def _pop(popval = 0):
     # pop value from stack (LIFO order) 
     pass
 pop = FunctionWrapper(_pop)
