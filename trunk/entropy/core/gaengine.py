@@ -40,7 +40,7 @@ class GAInstance(object):
                 penalty = 50 
             else:
                 # compute score func
-                penalty = self.params.getScoreF()(inst)
+                penalty = self.params.getScoreF()(inst[0])
             costs.append(penalty)
 
         # normalize costs
@@ -68,7 +68,7 @@ class GAInstance(object):
         for item in self.population:
             if random.uniform(0, 1) <= self.params.getMutateRate():
                 # take random node and replace it with another random node with the same arity
-                for node in traverse(item[0]):
+                for node in item[0].traverse():
                     if type(node) is not Node:
                         if random.uniform(0, 1) <= self.params.getMutateRate():
                             node = random.uniform(0, 1)
@@ -94,12 +94,12 @@ class GAInstance(object):
                 src, dst = src[0], dst[0]
                 src_node, dst_node = None, None
 
-                for node in traverse(src):
+                for node in src.traverse():
                     if random.uniform(0, 1) <= self.params.getCrossoverRate():
                         src_node = node
                         break
 
-                for node in traverse(dst):
+                for node in dst.traverse():
                     if random.uniform(0, 1) <= self.params.getCrossoverRate():
                         dst_node = node
                         break 
