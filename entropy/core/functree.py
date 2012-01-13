@@ -40,6 +40,7 @@ class Node(object):
 
         self.children = []
         self.setFunc(f)
+        self.node_id = -1
 
         if values:
             for node in values:
@@ -121,7 +122,7 @@ class Node(object):
 
     def toString(self, depth = 1):
         tmp = []
-        tmp.append('%s\n' % self.func.name)
+        tmp.append('%d: %s\n' % (self.node_id, self.func.name))
         for child in self.children:
             if hasattr(child, 'toString'):
                 tmp.append((' ' * depth) + '%s' % child.toString(depth + 1))
@@ -132,34 +133,89 @@ class Node(object):
     def __str__(self):
         return self.toString()
 
-def save(root, filename = "default.dat"):
-    """ Serialize algorithm starting from any node """
-    if verbose:
-        print 'Saving to %s' % filename
-    f = open(filename, 'wb')
-    pickle.dump(root, f, 0)
-    f.close()
-    if verbose:
-        print 'done!'
+class Tree(object):
 
-def load(filename = "default.dat"):
-    if verbose:
-        print 'Loading from %s' % filename
-    f = open(filename, 'rb', 0)
-    root = pickle.load(f)
-    f.close()
-    if verbose:
-        print 'done!'
-    return root 
+    def __init__(self, root):
+        self.cur_id = 0
+        self.min_id, self.max_id =  999999999, -1
+        self.root = root
+        self.enum()
 
-def traverse(cur_node):
-    Q = [cur_node]
-    while Q:
-        cur_node = Q.pop(0)
-        yield(cur_node)
-        if type(cur_node) is Node and cur_node.children:
-            tmp = [child for child in cur_node.listChildren()]
-            Q.extend(tmp)
+    def enum(self):
+        # assign an uniqueue ID to each node
+        ids = set()
+        tmp_id = 0
+        conflict = False
+        for node in self.traverse():
+            if type(node) is Node and node.node_id == -1:
+                node.node_id = self.cur_id
+                tmp_id = self.cur_id
+                self.cur_id += 1
+            elif type(node) is Node and node.node_id != -1:
+                if node.node_id not in ids:
+                    ids.add(node.node_id)
+                    if node.node_id > self.cur_id:
+                        self.cur_id = node.node_id
+                        tmp_id = self.cur_id
+                else:
+                    # conflict found, mark this node as -1 
+                    node.node_id = -1
+                    conflict = True
+
+            if self.min_id > tmp_id:
+                self.min_id = tmp_id
+            if self.max_id < tmp_id:
+                self.max_id = tmp_id
+
+        if conflict:
+            # resolve conflicts
+            self.enum()
+
+    def _eval(self, inp):
+        return self.root._eval(inp)
+
+    def getMinMaxId(self):
+        return self.min_id, self.max_id
+
+    def getRoot(self):
+        return self.root
+
+    def save(self, filename = "default.dat"):
+        """ Serialize algorithm starting from any node """
+        if verbose:
+            print 'Saving to %s' % filename
+        f = open(filename, 'wb')
+        pickle.dump(self.root, f, 0)
+        f.close()
+        if verbose:
+            print 'done!'
+
+    @staticmethod
+    def load(filename = "default.dat"):
+        if verbose:
+            print 'Loading from %s' % filename
+        f = open(filename, 'rb', 0)
+        root = pickle.load(f)
+        f.close()
+        if verbose:
+            print 'done!'
+        self.root = root
+        return self.root
+
+    def traverse(self, cur_node = None):
+        if cur_node is None:
+            cur_node = self.root
+        Q = [cur_node]
+        while Q:
+            cur_node = Q.pop(0)
+            yield(cur_node)
+            if type(cur_node) is Node and cur_node.children:
+                tmp = [child for child in cur_node.listChildren()]
+                Q.extend(tmp)
+
+    def __str__(self):
+        return str(self.root)
+
 
 def __prodRandomAlg(funclist, inputs, level, maxDepth):
     """ Generate random algorithm with the given depth """
@@ -172,8 +228,7 @@ def __prodRandomAlg(funclist, inputs, level, maxDepth):
     arglst = []
     for idx in xrange(rndfunc.argcnt):
         arglst.append(__prodRandomAlg(funclist, inputs, level + 1, maxDepth))
-    node = Node(rndfunc, arglst)
-    return node
+    return Node(rndfunc, arglst)
 
 #@timeit
 def prodRandomAlg(funclist, maxDepth = 3):
@@ -184,13 +239,15 @@ def prodRandomAlg(funclist, maxDepth = 3):
     res  = __prodRandomAlg(funclist, inputs, 1, maxDepth)
     if verbose:
         print 'done!'
-    return res, inputs[0]
+    return Tree(res), inputs[0]
 
 #root = Node(pop, [Node(push, [10])])
-#root = Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])])
-root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop], 4)
+root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
+#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop], 20)
 #save(root, 'algtest')
 #root  = load('pop1.dat')
 print root
-#print root._eval([])
+#print root.getMinMaxId()
+
+print root._eval([1, 2])
 
