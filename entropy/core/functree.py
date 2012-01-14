@@ -75,15 +75,13 @@ class Node(object):
         if type(node) is Node:
             res = node._eval(inp)
         else:
-            if node is not None:
+            if node:
                 res = node
             elif len(inp) > 0:
                 # substitute value
                 res = inp.pop(0)
         if res is None:
-            if verbose:
-                print 'Unexpected error!'
-            raise UnexpectedEvalError()
+            raise UnexpectedEvalError('Unexpected error!')
         return res
 
     def _eval(self, inp):
@@ -105,18 +103,19 @@ class Node(object):
                     res = self.__evalNext(child, inp)
                     args.append(res)
 
-            if self.func.name == '_push':
-                self.__evalNext(self.children[0], inp)
-                program_stack.append(*args)
-                return args
+                if self.func.name == '_push':
+                    self.__evalNext(self.children[0], inp)
+                    program_stack.append(*args)
+                    return args
 
-            elif self.func.name == '_pop':
-                if program_stack:
-                    return program_stack.pop(len(program_stack) - 1)
-                else:
-                    return 0
+                elif self.func.name == '_pop':
+                    if program_stack:
+                        return program_stack.pop(len(program_stack) - 1)
+                    else:
+                        return 0
 
                 return self.func(*args)
+
         else:
             return None 
 
@@ -242,12 +241,12 @@ def prodRandomAlg(funclist, maxDepth = 3):
     return Tree(res), inputs[0]
 
 #root = Node(pop, [Node(push, [10])])
-root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
+#root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
 #root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop], 20)
 #save(root, 'algtest')
 #root  = load('pop1.dat')
-print root
+#print root
 #print root.getMinMaxId()
 
-print root._eval([1, 2])
+#print root._eval([2, 1])
 
