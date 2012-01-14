@@ -54,6 +54,10 @@ def _compare(comparator, pos = 0, neg = 0):
     pass
 compare = FunctionWrapper(_compare)
 
+def _demul():
+    # demultiplexing of value
+    pass
+
 def _goto(label):
     pass
 
