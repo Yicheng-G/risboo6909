@@ -76,15 +76,18 @@ class Node(object):
             res = node._eval(inp)
         else:
             if node:
-                res = node
+                res = node[0]
             elif len(inp) > 0:
                 # substitute value
-                res = inp.pop(0)
+                res = inp[0]
+                inp = inp[1:]
+                inp.append(res)
+
         if res is None:
             raise UnexpectedEvalError('Unexpected error!')
         return res
 
-    def _eval(self, inp = []):
+    def _eval(self, inp):
         # evaluate if we have any children for this node
         if self.children:
 
@@ -104,9 +107,8 @@ class Node(object):
                     args.append(res)
 
                 if self.func.name == '_push':
-                    self.__evalNext(self.children[0], inp)
                     program_stack.append(*args)
-                    return args
+                    return args[0]         # !!
 
                 elif self.func.name == '_pop':
                     if program_stack:
@@ -197,8 +199,7 @@ class Tree(object):
         f.close()
         if verbose:
             print 'done!'
-        self.root = root
-        return self.root
+        return Tree(root)
 
     def traverse(self, cur_node = None):
         """ Non-recursive tree traversal """
@@ -217,12 +218,12 @@ class Tree(object):
         return str(self.root)
 
 
-def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
+def _prodRandomAlgDesc(funclist, inputs, level, maxDepth):
     """ Generate random algorithm with the given depth (from TOP to BOTTOM) """
 
     if level > maxDepth:
         if not random.randint(0, 1):
-            return random.uniform(0, 1)
+            return [random.uniform(0, 1)]
         inputs[0] += 1
         return []
 
@@ -231,7 +232,7 @@ def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
 
     for idx in xrange(rndfunc.argcnt):
         if nextNode is None:
-            res = __prodRandomAlgDesc(funclist, inputs, level + 1, maxDepth)
+            res = _prodRandomAlgDesc(funclist, inputs, level + 1, maxDepth)
             if type(res) is Node and res.func.name == '_demul':
                 # if next node is _demul, connect all inputs of current node with that node
                 nextNode = res
@@ -241,23 +242,72 @@ def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
 
     return Node(rndfunc, arglst)
 
+"""
+def _prodRandomAlgAsc(funclist, argNum, level, maxDepth, children):
+
+    if level == 1 and argNum:
+        # level = 1 is the deepest level here, so here should be input leaf nodes
+        # generate argNum input nodes
+        inp_list = []
+        for idx in xrange(argNum):
+            inp_list.append([])
+        return _prodRandomAlgAsc(funclist, argNum, level + 1, maxDepth, inp_list)
+    else:
+        # for each child node, generate its ancestor
+        num_children = len(children)
+        child_idx = 0
+        nodes = []
+
+        while 1:
+            # filter out function with inappropriate number of inputs
+            tmp = filter(lambda f: f.func.argcnt <= (num_children - child_idx) , funclist)
+            rndfunc = tmp[random.randint(0, len(tmp) - 1)]
+            arglst = []
+
+            for idx in xrange(child_idx + 1, rndfunc.func.argcnt):
+                arglst.append(children[idx])
+                child_idx += 1
+
+            nodes.append(Node(rndfunc, arglst))
+
+            if child_idx >= num_children: 
+                break
+
+        if level <= maxDepth:
+            return _prodRandomAlgAsc(funclist, argNum, level, maxDepth, nodes)
+        else:
+            # create a root node
+            return Node(
+"""
+
 #@timeit
-def prodRandomAlg(funclist, maxDepth = 3):
+def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
+
     if verbose:
         print 'Generating algorithm with maxdepth = %d' % maxDepth
-    random.seed()
+
     inputs = [0]
-    res  = __prodRandomAlgDesc(funclist, inputs, 1, maxDepth)
+    random.seed()
+
+    if method == 'desc':
+        while 1:
+            inputs = [0]
+            res  = _prodRandomAlgDesc(funclist, inputs, 1, maxDepth)
+            if argNum == -1 or inputs[0] == argNum: 
+                break
+        
+    elif method == 'asc':
+        res  = _prodRandomAlgAsc(funclist, argNum, 1, maxDepth, [])
+
     if verbose:
         print 'done!'
+
     return Tree(res), inputs[0]
 
 #root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
-#d = Node(demul, [2])
-#root = Tree(Node(add, [d, d]))
-#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop, demul], 4)
+#root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul], method = 'desc', maxDepth = 16, argNum = 2)
 #root.save('algtest')
-#root  = load('pop1.dat')
+#root  = Tree.load('algtest')
 #print root
 #print root.getMinMaxId()
 #print root._eval([2, 1])
