@@ -7,7 +7,7 @@ def score(alg):
     pts = 100
     try:
         for x in xrange(0, 100):
-            if alg._eval([x]) == ((x + 1) / 2): pts -= 1
+            if alg.eval([x]) == ((x + 1) / 2): pts -= 1
     except:
         pass
     return pts

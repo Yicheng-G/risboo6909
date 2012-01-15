@@ -70,59 +70,6 @@ class Node(object):
             if child < len(self.children):
                 del self.children[child]
 
-    def __evalNext(self, node, inp):
-        res = None
-        if type(node) is Node:
-            res = node._eval(inp)
-        else:
-            if node:
-                res = node[0]
-            elif len(inp) > 0:
-                # substitute value
-                res = inp[0]
-                inp = inp[1:]
-                inp.append(res)
-
-        if res is None:
-            raise UnexpectedEvalError('Unexpected error!')
-        return res
-
-    def _eval(self, inp):
-        # evaluate if we have any children for this node
-        if self.children:
-
-            args = []
-
-            if self.func.name == '_compare':
-                # special behaviour for comparison
-                if self.__evalNext(self.children[0], inp):
-                    return self.__evalNext(self.children[1], inp)
-                else:
-                    return self.__evalNext(self.children[2], inp)
-
-            else:
-
-                for child in self.listChildren():
-                    res = self.__evalNext(child, inp)
-                    args.append(res)
-
-                if self.func.name == '_push':
-                    program_stack.append(*args)
-                    return args[0]         # !!
-
-                elif self.func.name == '_pop':
-                    if program_stack:
-                        return program_stack.pop(len(program_stack) - 1)
-                    else:
-                        return 0
-
-                elif self.func.name == '_loop':
-                    
-                    pass
-
-                return self.func(*args)
-        else:
-            return None 
 
     def toString(self, depth = 1):
         tmp = []
@@ -175,8 +122,63 @@ class Tree(object):
             # resolve conflicts
             self.enum(visited)
 
-    def _eval(self, inp = []):
-        return self.root._eval(inp)
+    def __evalNext(self, node, inp):
+        res = None
+        if type(node) is Node:
+            res = self._eval(inp, node)
+        else:
+            if node:
+                res = node[0]
+            elif len(inp) > 0:
+                # substitute value
+                res = inp[0]
+                inp = inp[1:]
+                inp.append(res)
+
+        if res is None:
+            raise UnexpectedEvalError('Unexpected error!')
+        return res
+
+    def _eval(self, inp, node):
+        # evaluate if we have any children for this node
+        if node.children:
+
+            args = []
+
+            if node.func.name == '_compare':
+                # special behaviour for comparison
+                if self.__evalNext(node.children[0], inp):
+                    return self.__evalNext(node.children[1], inp)
+                else:
+                    return self.__evalNext(node.children[2], inp)
+
+            else:
+
+                for child in node.listChildren():
+                    res = self.__evalNext(child, inp)
+                    args.append(res)
+
+                if node.func.name == '_push':
+                    program_stack.append(*args)
+                    return args[0]         # !!
+
+                elif node.func.name == '_pop':
+                    if program_stack:
+                        return program_stack.pop(len(program_stack) - 1)
+                    else:
+                        return 0
+
+                elif node.func.name == '_loop':
+                    
+                    pass
+
+                return node.func(*args)
+        else:
+            return None 
+
+
+    def eval(self, inp = []):
+        return self._eval(inp, self.root)
 
     def getMinMaxId(self):
         return self.min_id, self.max_id
@@ -313,10 +315,10 @@ def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
     return Tree(res), inputs[0]
 
 
-#root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul, loop], method = 'desc', maxDepth = 5, argNum = 2)
+root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul], method = 'desc', maxDepth = 5, argNum = 1)
 #root.save('algtest')
 #root  = Tree.load('../pop1.dat')
 #print root
 #print root.getMinMaxId()
-#print root._eval([2])
+print root.eval([2])
 
