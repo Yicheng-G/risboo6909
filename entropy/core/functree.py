@@ -137,9 +137,9 @@ class Tree(object):
         self.cur_id = 0
         self.min_id, self.max_id =  999999999, -1
         self.root = root
-        self.enum()
+        self.enum(set())
 
-    def enum(self):
+    def enum(self, visited):
         # assign an uniqueue ID to each node
         ids, tmp_id = set(), 0
         conflict = False
@@ -148,11 +148,13 @@ class Tree(object):
             if type(node) is Node and node.node_id == -1:
                 node.node_id, tmp_id = self.cur_id, self.cur_id
                 self.cur_id += 1
-            elif type(node) is Node and node.node_id != -1:
+                visited.add(node)
+            elif type(node) is Node and node.node_id != -1 and node not in visited:
                 if node.node_id not in ids:
                     ids.add(node.node_id)
                     if node.node_id > self.cur_id:
                         self.cur_id, tmp_id = node.node_id, self.cur_id
+                    visited.add(node)
                 else:
                     # conflict found, mark this node as -1 
                     node.node_id = -1
@@ -165,7 +167,7 @@ class Tree(object):
 
         if conflict:
             # resolve conflicts
-            self.enum()
+            self.enum(visited)
 
     def _eval(self, inp = []):
         return self.root._eval(inp)
@@ -199,8 +201,10 @@ class Tree(object):
         return self.root
 
     def traverse(self, cur_node = None):
+        """ Non-recursive tree traversal """
         if cur_node is None:
             cur_node = self.root
+
         Q = [cur_node]
         while Q:
             cur_node = Q.pop(0)
@@ -215,6 +219,7 @@ class Tree(object):
 
 def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
     """ Generate random algorithm with the given depth (from TOP to BOTTOM) """
+
     if level > maxDepth:
         if not random.randint(0, 1):
             return random.uniform(0, 1)
@@ -232,7 +237,6 @@ def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
                 nextNode = res
         else:
             res = nextNode
-
         arglst.append(res)
 
     return Node(rndfunc, arglst)
@@ -251,7 +255,7 @@ def prodRandomAlg(funclist, maxDepth = 3):
 #root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
 #d = Node(demul, [2])
 #root = Tree(Node(add, [d, d]))
-#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop, demul], 3)
+#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop, demul], 4)
 #root.save('algtest')
 #root  = load('pop1.dat')
 #print root

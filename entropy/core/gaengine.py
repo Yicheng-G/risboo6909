@@ -107,6 +107,8 @@ class GAInstance(object):
                 if src_node and dst_node:
                     # exchange
                     src_node, dst_node = copy.deepcopy(dst_node), copy.deepcopy(src_node)
+                    src.enum(set())
+                    dst.enum(set())
 
     def getBestEntity(self, pop, costs):
         bestScore, bestItem = -GAInstance.MAX_INT, None
