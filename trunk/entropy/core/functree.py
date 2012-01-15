@@ -84,7 +84,7 @@ class Node(object):
             raise UnexpectedEvalError('Unexpected error!')
         return res
 
-    def _eval(self, inp):
+    def _eval(self, inp = []):
         # evaluate if we have any children for this node
         if self.children:
 
@@ -115,7 +115,6 @@ class Node(object):
                         return 0
 
                 return self.func(*args)
-
         else:
             return None 
 
@@ -142,20 +141,18 @@ class Tree(object):
 
     def enum(self):
         # assign an uniqueue ID to each node
-        ids = set()
-        tmp_id = 0
+        ids, tmp_id = set(), 0
         conflict = False
+
         for node in self.traverse():
             if type(node) is Node and node.node_id == -1:
-                node.node_id = self.cur_id
-                tmp_id = self.cur_id
+                node.node_id, tmp_id = self.cur_id, self.cur_id
                 self.cur_id += 1
             elif type(node) is Node and node.node_id != -1:
                 if node.node_id not in ids:
                     ids.add(node.node_id)
                     if node.node_id > self.cur_id:
-                        self.cur_id = node.node_id
-                        tmp_id = self.cur_id
+                        self.cur_id, tmp_id = node.node_id, self.cur_id
                 else:
                     # conflict found, mark this node as -1 
                     node.node_id = -1
@@ -170,7 +167,7 @@ class Tree(object):
             # resolve conflicts
             self.enum()
 
-    def _eval(self, inp):
+    def _eval(self, inp = []):
         return self.root._eval(inp)
 
     def getMinMaxId(self):
@@ -216,17 +213,28 @@ class Tree(object):
         return str(self.root)
 
 
-def __prodRandomAlg(funclist, inputs, level, maxDepth):
-    """ Generate random algorithm with the given depth """
+def __prodRandomAlgDesc(funclist, inputs, level, maxDepth):
+    """ Generate random algorithm with the given depth (from TOP to BOTTOM) """
     if level > maxDepth:
         if not random.randint(0, 1):
             return random.uniform(0, 1)
         inputs[0] += 1
         return []
+
     rndfunc = funclist[random.randint(0, len(funclist) - 1)]
-    arglst = []
+    arglst, nextNode = [], None
+
     for idx in xrange(rndfunc.argcnt):
-        arglst.append(__prodRandomAlg(funclist, inputs, level + 1, maxDepth))
+        if nextNode is None:
+            res = __prodRandomAlgDesc(funclist, inputs, level + 1, maxDepth)
+            if type(res) is Node and res.func.name == '_demul':
+                # if next node is _demul, connect all inputs of current node with that node
+                nextNode = res
+        else:
+            res = nextNode
+
+        arglst.append(res)
+
     return Node(rndfunc, arglst)
 
 #@timeit
@@ -235,18 +243,18 @@ def prodRandomAlg(funclist, maxDepth = 3):
         print 'Generating algorithm with maxdepth = %d' % maxDepth
     random.seed()
     inputs = [0]
-    res  = __prodRandomAlg(funclist, inputs, 1, maxDepth)
+    res  = __prodRandomAlgDesc(funclist, inputs, 1, maxDepth)
     if verbose:
         print 'done!'
     return Tree(res), inputs[0]
 
-#root = Node(pop, [Node(push, [10])])
 #root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
-#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop], 20)
-#save(root, 'algtest')
+#d = Node(demul, [2])
+#root = Tree(Node(add, [d, d]))
+#root, inputs = prodRandomAlg([add, sub, inc, dec, mul, div, compare, push, pop, demul], 3)
+#root.save('algtest')
 #root  = load('pop1.dat')
 #print root
 #print root.getMinMaxId()
-
 #print root._eval([2, 1])
 
