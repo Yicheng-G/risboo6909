@@ -36,10 +36,19 @@ class Population(object):
         self.funccnt = 0
         self.score_func = None
         self.maxGen = -1
+        self.lb, self.hb = 0, 1
         self.mutateRate = 0.1
         self.crossoverRate = 0.1
         self.stopAfterGen = 1000
         self.filename = 'default.dat'
+
+
+    def setDataRange(self, low_bound, high_bound):
+        self.lb = low_bound
+        self.hb = high_bound
+
+    def getDataRange(self):
+        return self.lb, self.hb
 
     def setStopAfter(self, n):
         self.stopAfterGen = n
