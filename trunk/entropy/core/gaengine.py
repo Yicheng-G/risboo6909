@@ -18,7 +18,7 @@ class GAInstance(object):
     def initRandomPop(self, flist, maxspec, maxalg_sz):
         pop = []
         for x in xrange(maxspec):
-            inst, args = prodRandomAlg(flist, random.randint(1, maxalg_sz))
+            inst, args = prodRandomAlg(flist, 'desc', random.randint(1, maxalg_sz), self.params.getArgsReq())
             pop.append([inst, args])
         return pop
 
@@ -34,13 +34,15 @@ class GAInstance(object):
         # get the scores for all instances and return them in array
         costs = []
         for inst in self.population:
+            """
             penalty = 0
             if inst[1] != self.params.getArgsReq():
                 #penalty = abs(self.params.getArgsReq() - inst[1])
                 penalty = 50 
             else:
-                # compute score func
-                penalty = self.params.getScoreF()(inst[0])
+            """
+            # compute score func
+            penalty = self.params.getScoreF()(inst[0])
             costs.append(penalty)
 
         # normalize costs
@@ -121,11 +123,16 @@ class GAInstance(object):
     def evolve(self, max_gen = 100):
         # computes evolution bounded by maximum generations number given by max_gen
         # if max_gen is -1 evolution will continue until good enough solution will be found
-        cur_gen = 0
         best_item, best_score, gener = None, 0, 0
+        costs_lst, cur_gen = [], 0
         while (cur_gen < max_gen or (max_gen == -1 and gener < self.params.getStopAfter())):
             costs = self.evaluate()
             tmp = self.getBestEntity(self.population, costs)
+            """
+            costs_lst.append(tmp[1])
+            if len(costs_lst) == 100:
+                del costs_lst[0]
+            """
             if tmp[1] > best_score:
                 best_score = tmp[1]
                 best_item = copy.deepcopy(tmp[0])
@@ -134,7 +141,10 @@ class GAInstance(object):
                     break
                 gener = 0
             if not cur_gen % self.params.getReportRate():
-                print 'generation N%d, best score so far is %f' % (cur_gen, best_score)
+                costs_lst.append(best_score)
+                print 'generation N%d, best score so far is %2.2f' % (cur_gen, best_score)
+                best_score = -1
+
             self.roulette(costs)
             self.mutate()
             self.crossover()
@@ -143,5 +153,5 @@ class GAInstance(object):
 
         print best_item
         print 'score %f' % best_score
+        best_item.save(self.params.getFileName())
 
-        save(best_item, self.params.getFileName())

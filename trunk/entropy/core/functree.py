@@ -116,6 +116,10 @@ class Node(object):
                     else:
                         return 0
 
+                elif self.func.name == '_loop':
+                    
+                    pass
+
                 return self.func(*args)
         else:
             return None 
@@ -236,6 +240,10 @@ def _prodRandomAlgDesc(funclist, inputs, level, maxDepth):
             if type(res) is Node and res.func.name == '_demul':
                 # if next node is _demul, connect all inputs of current node with that node
                 nextNode = res
+            if type(res) is Node and res.func.name == '_loop':
+                # loop has only label to go as its argument
+                
+                pass
         else:
             res = nextNode
         arglst.append(res)
@@ -304,11 +312,11 @@ def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
 
     return Tree(res), inputs[0]
 
-#root = Tree(Node(compare, [Node(gt, [Node(inc, [Node(ident)]), Node(inc, [Node(ident)])]), Node(add, [1, 2]), Node(sub, [1, 2])]))
-#root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul], method = 'desc', maxDepth = 16, argNum = 2)
+
+#root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul, loop], method = 'desc', maxDepth = 5, argNum = 2)
 #root.save('algtest')
-#root  = Tree.load('algtest')
+#root  = Tree.load('../pop1.dat')
 #print root
 #print root.getMinMaxId()
-#print root._eval([2, 1])
+#print root._eval([2])
 

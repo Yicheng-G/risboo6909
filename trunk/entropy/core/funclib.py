@@ -59,9 +59,6 @@ def _demul(a):
     return a
 demul = FunctionWrapper(_demul)
 
-def _goto(label):
-    pass
-
 def _loop(loop_to):
     # label is index of node to loop
     pass
