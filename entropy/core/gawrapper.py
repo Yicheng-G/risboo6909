@@ -48,7 +48,7 @@ class Population(object):
         self.hb = high_bound
 
     def getDataRange(self):
-        return self.lb, self.hb
+        return [self.lb, self.hb]
 
     def setStopAfter(self, n):
         self.stopAfterGen = n

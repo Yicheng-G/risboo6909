@@ -18,7 +18,7 @@ class GAInstance(object):
     def initRandomPop(self, flist, maxspec, maxalg_sz):
         pop = []
         for x in xrange(maxspec):
-            inst, args = prodRandomAlg(flist, 'desc', random.randint(1, maxalg_sz), self.params.getArgsReq())
+            inst, args = prodRandomAlg(flist, 'desc', self.params.getDataRange(), random.randint(1, maxalg_sz), self.params.getArgsReq())
             pop.append([inst, args])
         return pop
 
@@ -34,33 +34,39 @@ class GAInstance(object):
         # get the scores for all instances and return them in array
         costs = []
         for inst in self.population:
-            """
-            penalty = 0
-            if inst[1] != self.params.getArgsReq():
-                #penalty = abs(self.params.getArgsReq() - inst[1])
-                penalty = 50 
-            else:
-            """
             # compute score func
             penalty = self.params.getScoreF()(inst[0])
+#            print penalty
             costs.append(penalty)
 
         # normalize costs
-        max_cost = max(costs) + 0.0000001
-        #print max_cost
+        m = min(costs)
+        c = 1.0 / (max(costs) - m)
         for idx in xrange(len(costs)):
-            costs[idx] = 1 - (1.0 * costs[idx] / max_cost)
+            costs[idx] = (c * (costs[idx] - m))
+#        print costs
         return costs
 
     def roulette(self, costs):
         new_pop = []
         for idx in xrange(len(self.population)):
-            rep = int(costs[idx] * self.params.getMaxSpecies())
+            rep = abs(int(costs[idx] * self.params.getMaxSpecies()))
+            if rep > int(self.params.getMaxSpecies() * 0.1):
+                rep = int(self.params.getMaxSpecies() * 0.1)
+#            print '+', rep
             for x in xrange(rep):
-                new_pop.append(copy.deepcopy(self.population[idx]))
+                new_pop.append(self.population[idx])
+
         random.shuffle(new_pop)
-        self.population = new_pop[:self.params.getMaxSpecies()]
+        self.population = []
+
+        for idx in xrange(len(new_pop)):
+            self.population.append(copy.deepcopy(new_pop[idx]))
+
+        self.population = self.population[:self.params.getMaxSpecies()]
+
         delta =  self.params.getMaxSpecies() - len(self.population)
+#        print '*', delta
         if delta:
             tail = self.initRandomPop(self.params.getFuncList(), delta, self.params.getMaxAlgSize())
             self.population.extend(tail)
@@ -73,7 +79,7 @@ class GAInstance(object):
                 for node in item[0].traverse():
                     if type(node) is not Node:
                         if random.uniform(0, 1) <= self.params.getMutateRate():
-                            node = random.uniform(0, 1)
+                            node = random.uniform(self.params.getDataRange()[0], self.params.getDataRange()[1])
                     else:
                         if random.uniform(0, 1) <= self.params.getMutateRate():
                             lst = self.findSubst(node, self.params.getFuncList())
@@ -125,6 +131,7 @@ class GAInstance(object):
         # if max_gen is -1 evolution will continue until good enough solution will be found
         best_item, best_score, gener = None, 0, 0
         costs_lst, cur_gen = [], 0
+        local_best = 0
         while (cur_gen < max_gen or (max_gen == -1 and gener < self.params.getStopAfter())):
             costs = self.evaluate()
             tmp = self.getBestEntity(self.population, costs)
@@ -133,17 +140,22 @@ class GAInstance(object):
             if len(costs_lst) == 100:
                 del costs_lst[0]
             """
-            if tmp[1] > best_score:
+            if tmp[1] >= local_best:
+                local_best = tmp[1]
+
+            if tmp[1] >= best_score:
                 best_score = tmp[1]
                 best_item = copy.deepcopy(tmp[0])
-                # exit immediatly if score is 1.0
+                # exit immediately if score is 1
                 if int(best_score) == 1:
                     break
+                best_item.save(self.params.getFileName())
                 gener = 0
+
             if not cur_gen % self.params.getReportRate():
                 costs_lst.append(best_score)
-                print 'generation N%d, best score so far is %2.2f' % (cur_gen, best_score)
-                best_score = -1
+                print 'generation N%d, best score so far is %f, local best %f' % (cur_gen, best_score, local_best)
+                local_best = 0
 
             self.roulette(costs)
             self.mutate()

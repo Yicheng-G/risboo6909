@@ -224,21 +224,22 @@ class Tree(object):
         return str(self.root)
 
 
-def _prodRandomAlgDesc(funclist, inputs, level, maxDepth):
+def _prodRandomAlgDesc(funclist, inputs, level, minMax, maxDepth):
     """ Generate random algorithm with the given depth (from TOP to BOTTOM) """
 
     if level > maxDepth:
-        if not random.randint(0, 1):
-            return [random.uniform(0, 1)]
         inputs[0] += 1
         return []
+
+    if random.uniform(0, 1) < 0.1:
+        return [random.uniform(minMax[0], minMax[1])]
 
     rndfunc = funclist[random.randint(0, len(funclist) - 1)]
     arglst, nextNode = [], None
 
     for idx in xrange(rndfunc.argcnt):
         if nextNode is None:
-            res = _prodRandomAlgDesc(funclist, inputs, level + 1, maxDepth)
+            res = _prodRandomAlgDesc(funclist, inputs, level + 1, minMax, maxDepth)
             if type(res) is Node and res.func.name == '_demul':
                 # if next node is _demul, connect all inputs of current node with that node
                 nextNode = res
@@ -291,7 +292,7 @@ def _prodRandomAlgAsc(funclist, argNum, level, maxDepth, children):
 """
 
 #@timeit
-def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
+def prodRandomAlg(funclist, method, minMax, maxDepth, argNum = -1):
 
     if verbose:
         print 'Generating algorithm with maxdepth = %d' % maxDepth
@@ -302,7 +303,7 @@ def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
     if method == 'desc':
         while 1:
             inputs = [0]
-            res  = _prodRandomAlgDesc(funclist, inputs, 1, maxDepth)
+            res  = _prodRandomAlgDesc(funclist, inputs, 1, minMax, maxDepth)
             if argNum == -1 or inputs[0] == argNum: 
                 break
         
@@ -315,10 +316,10 @@ def prodRandomAlg(funclist, method, maxDepth, argNum = -1):
     return Tree(res), inputs[0]
 
 
-root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul], method = 'desc', maxDepth = 5, argNum = 1)
+#root, inputs = prodRandomAlg(funclist = [add, sub, inc, dec, mul, div, compare, push, pop, demul], method = 'desc', minMax = [1, 10], maxDepth = 5, argNum = 1)
 #root.save('algtest')
 #root  = Tree.load('../pop1.dat')
 #print root
 #print root.getMinMaxId()
-print root.eval([2])
+#print root.eval([2])
 
