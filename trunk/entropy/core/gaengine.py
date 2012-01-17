@@ -36,23 +36,39 @@ class GAInstance(object):
         for inst in self.population:
             # compute score func
             penalty = self.params.getScoreF()(inst[0])
-#            print penalty
             costs.append(penalty)
 
-        # normalize costs
-        m = min(costs)
-        c = 1.0 / (max(costs) - m)
+        net = sum(costs)
         for idx in xrange(len(costs)):
-            costs[idx] = (c * (costs[idx] - m))
-#        print costs
+        #    tmp = costs[idx]
+            costs[idx] = net - costs[idx]
+        #    net -= tmp
+            
         return costs
 
     def roulette(self, costs):
         new_pop = []
+        tmp_lst = sorted(costs)
+        m, M  = tmp_lst[0], tmp_lst[len(tmp_lst) - 1]
+        for idx in xrange(int(self.params.getMaxSpecies() * random.uniform(0.9, 1))):
+            p = random.uniform(m, M)
+            selected = -1
+            net = 0
+            for i in xrange(len(tmp_lst)):
+                net += tmp_lst[i]
+                if p <= net:
+                    selected = tmp_lst[i]
+                    break
+
+            selected = costs.index(selected)
+            new_pop.append(copy.deepcopy(self.population[selected]))
+
+        self.population = new_pop 
+        """
         for idx in xrange(len(self.population)):
             rep = abs(int(costs[idx] * self.params.getMaxSpecies()))
-            if rep > int(self.params.getMaxSpecies() * 0.1):
-                rep = int(self.params.getMaxSpecies() * 0.1)
+#            if rep > int(self.params.getMaxSpecies() * 0.1):
+#                rep = int(self.params.getMaxSpecies() * 0.1)
 #            print '+', rep
             for x in xrange(rep):
                 new_pop.append(self.population[idx])
@@ -65,8 +81,8 @@ class GAInstance(object):
 
         self.population = self.population[:self.params.getMaxSpecies()]
 
+        """
         delta =  self.params.getMaxSpecies() - len(self.population)
-#        print '*', delta
         if delta:
             tail = self.initRandomPop(self.params.getFuncList(), delta, self.params.getMaxAlgSize())
             self.population.extend(tail)
@@ -154,10 +170,11 @@ class GAInstance(object):
 
             if not cur_gen % self.params.getReportRate():
                 costs_lst.append(best_score)
-                print 'generation N%d, best score so far is %f, local best %f' % (cur_gen, best_score, local_best)
+                print 'generation N%d, best score so far is %d, local best %d' % (cur_gen, best_score, local_best)
                 local_best = 0
 
             self.roulette(costs)
+#            print 'zzz'
             self.mutate()
             self.crossover()
             cur_gen += 1
