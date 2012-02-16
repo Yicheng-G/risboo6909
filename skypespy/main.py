@@ -3,7 +3,7 @@
 import Skype4Py
 import logging
 
-skype = Skype4Py.Skype() 
+skype = Skype4Py.Skype(Transport='x11') 
 
 def isSkypeRunning():
     if not skype.Client.IsRunning:
@@ -17,7 +17,9 @@ def attachToSkype():
     skype.Attach()
 
 if __name__ == '__main__':
-    logging.basicConfig(filename = 'skypespy.log', format = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s', level = logging.INFO)
+    logging.basicConfig(filename = 'skypespy.log', format = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s', level = logging.DEBUG)
+
     isSkypeRunning()
     attachToSkype()
+
     print skype.CurrentUser.FullName
