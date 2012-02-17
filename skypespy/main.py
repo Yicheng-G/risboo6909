@@ -8,6 +8,8 @@ import logging, time
 skype = Skype4Py.Skype(Transport='x11') 
 userdata = {}
 
+REFRESH_DELAY = 10
+
 def isSkypeRunning():
     if not skype.Client.IsRunning:
         logging.info('Skype is not running, trying to start...')
@@ -22,22 +24,28 @@ def attachToSkype():
 def refreshFriends():
     try:
         for friend in skype.Friends:
-            userdata[friend.Handle] = UserInfo(friend) 
-            print friend.Handle, friend.FullName, friend.Country
+            uinfo = userdata.get(friend.Handle, UserInfo())
+            uinfo.update(friend)
+#            print friend.Handle, friend.FullName, friend.Country, friend.OnlineStatus
     except:
         pass
 
 if __name__ == '__main__':
     logging.basicConfig(filename = 'skypespy.log', format = '%(asctime)s - %(levelname)s - %(module)s:%(funcName)s - %(message)s',
-                             level = logging.DEBUG)
+                             level = logging.INFO)
+
 
     isSkypeRunning()
     attachToSkype()
 
     while True:
-        logging.info('Refreshing friends list...')
-        refreshFriends()
-        #print skype.CurrentUser.FullName
-        time.sleep(2)
-        logging.info('Done refreshing!')
+        try:
+            refreshFriends()
+            timestamp = time.ctime(time.time())
+            logging.info('Refreshed friends list at %s for user %s' % (timestamp, skype.CurrentUser.FullName))
+            print 'Refreshed friends list at %s for user %s' % (timestamp, skype.CurrentUser.FullName)
+            time.sleep(REFRESH_DELAY)
+        except KeyboardInterrupt:
+            print 'break'
+            break
 
