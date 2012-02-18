@@ -30,7 +30,7 @@ class ReadyData(object):
             if len(user.getData()) >= self.save_after or force:
                 logger.info('starting data dump for user %s' % user)
                 if not force:
-                    head, tail = user.getData()[:len(user.getData()) - 1], user.getData()[:-1] 
+                    head, tail = user.getData()[:len(user.getData()) - 1], user.getData()[-1] 
                 else:
                     head = user.getData()
                 # dump head items and keep tail item
