@@ -66,9 +66,7 @@ if __name__ == '__main__':
             aggregate(DATA_DIR)
 
             timestamp = time.ctime(time.time())
-
             logger.info('Refreshed friends list at %s for user %s' % (timestamp, skype.CurrentUser.FullName))
-
             time.sleep(REFRESH_DELAY)
 
         except KeyboardInterrupt:
