@@ -21,7 +21,7 @@ class UserInfo(object):
             isDifferent = False
             for prop in prev_data:
                 if prev_data[prop] != userattr[prop]:
-                    logger.info('diff detected for %s: %s has been changed to %s' % (userattr['skypename'], prev_data[prop], userattr[prop]))
+                    logger.info('diff detected for %s: %s has been changed to %s' % (self.name, prev_data[prop], userattr[prop]))
                     isDifferent = True
                     break
             return isDifferent
@@ -29,6 +29,9 @@ class UserInfo(object):
 
     def update(self, user):
         if user:
+
+            # save user name for convenience
+            self.name = user.Handle
 
             userattr = {
                 'skypename': user.Handle,

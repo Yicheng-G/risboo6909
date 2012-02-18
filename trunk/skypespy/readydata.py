@@ -43,6 +43,6 @@ class ReadyData(object):
                     pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)
                     f.close()
                 if not force:
-                    user.setData(tail)
+                    user.setData([tail])
                 logger.info('data dump finished')
 
