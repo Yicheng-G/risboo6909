@@ -34,10 +34,10 @@ class ReadyData(object):
                 else:
                     head = user.getData()
                 # dump head items and keep tail item
+                path = os.path.join(ReadyData.DATA_DIR, username)
+                if not os.path.isdir(path):
+                    os.mkdir(path)
                 for item in head:
-                    path = os.path.join(ReadyData.DATA_DIR, username)
-                    if not os.path.isdir(path):
-                        os.mkdir(path)
                     fname = os.path.join(path, 'data.%s.%d' % (username, item[0]))                  
                     f = open(fname, 'wb')
                     pickle.dump(item, f, pickle.HIGHEST_PROTOCOL)

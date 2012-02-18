@@ -37,7 +37,7 @@ def refreshFriends():
 def createLogger():
     logger = logging.getLogger('skypespy')
     logger.setLevel(logging.INFO)
-    rfh = logging.handlers.RotatingFileHandler('skypespy.log', maxBytes = 100000, backupCount = 2)
+    rfh = logging.handlers.RotatingFileHandler('skypespy.log', maxBytes = 1000000, backupCount = 2)
     rfh.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
