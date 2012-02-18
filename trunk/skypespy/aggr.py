@@ -11,7 +11,6 @@ def listdirs(root_dir):
             yield os.path.join(dirname, subdirname)
 
 def aggregate(root_dir):
-    logger.info('trying to aggregate')
     if os.path.isdir(root_dir):
         # traverse through the all subdirectories inside the data directory
         for path in listdirs(root_dir):
@@ -20,6 +19,7 @@ def aggregate(root_dir):
             for fname in os.listdir(path):
                 m = log_patt.match(fname)
                 if m:
+                    logger.info('starting aggregation in %s' % path)
                     try:
                         path_to_file = os.path.join(path, fname)
                         f_in = open(path_to_file, 'rb')
@@ -29,8 +29,8 @@ def aggregate(root_dir):
                         os.remove(path_to_file)
                     except:
                         logging.warning('could not aggregate data in %s' % path)
+                    logger.info('aggregation finished')
             f_out.close()
-    logger.info('aggregation finished')
 
 if __name__ == '__main__':
     aggregate()
