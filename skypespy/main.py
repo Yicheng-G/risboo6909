@@ -11,7 +11,7 @@ import logging.handlers
 skype = Skype4Py.Skype(Transport='x11') 
 readyData = ReadyData(save_after = 4)
 
-REFRESH_DELAY = 2
+REFRESH_DELAY = 5
 DATA_DIR = 'data'
 
 def isSkypeRunning():
