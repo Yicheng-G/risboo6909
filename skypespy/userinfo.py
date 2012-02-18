@@ -21,7 +21,7 @@ class UserInfo(object):
             isDifferent = False
             for prop in prev_data:
                 if prev_data[prop] != userattr[prop]:
-                    logging.info('diff detected for %s: %s has changed to %s' % (userattr['skypename'], prev_data[prop], userattr[prop])
+                    logging.info('diff detected for %s: %s has changed to %s' % (userattr['skypename'], prev_data[prop], userattr[prop]))
                     isDifferent = True
                     break
             return isDifferent
