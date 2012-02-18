@@ -1,4 +1,6 @@
-import time
+import time, logging
+
+logger = logging.getLogger('skypespy')
 
 class UserInfo(object):
 
@@ -37,5 +39,6 @@ class UserInfo(object):
             }
 
             if self.diff(userattr):
+                logging.info('difference detected')
                 self.data.append( (int(time.time()), userattr, ) )
 

@@ -11,7 +11,7 @@ def listdirs(root_dir):
             yield os.path.join(dirname, subdirname)
 
 def aggregate(root_dir):
-    logger.info('aggregating')
+    logger.info('trying to aggregate')
     if os.path.isdir(root_dir):
         # traverse through the all subdirectories inside the data directory
         for path in listdirs(root_dir):

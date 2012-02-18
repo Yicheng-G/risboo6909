@@ -25,10 +25,10 @@ class ReadyData(object):
  
     def dumpData(self, force = False):
         # dump all the data except the last record
-        logger.info('starting data dump')
         for username in self.userdata.keys():
             user = self.userdata[username]
             if len(user.getData()) >= self.save_after or force:
+                logger.info('starting data dump')
                 if not force:
                     head, tail = user.getData()[:len(user.getData()) - 1], user.getData()[:-1] 
                 else:
@@ -44,5 +44,5 @@ class ReadyData(object):
                     f.close()
                 if not force:
                     user.setData(tail)
-        logger.info('data dump finished')
+                logger.info('data dump finished')
 
