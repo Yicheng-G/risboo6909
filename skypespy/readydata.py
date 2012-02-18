@@ -28,7 +28,7 @@ class ReadyData(object):
         for username in self.userdata.keys():
             user = self.userdata[username]
             if len(user.getData()) >= self.save_after or force:
-                logger.info('starting data dump')
+                logger.info('starting data dump for user %s' % user)
                 if not force:
                     head, tail = user.getData()[:len(user.getData()) - 1], user.getData()[:-1] 
                 else:
