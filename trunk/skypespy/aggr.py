@@ -5,6 +5,9 @@ import os, re, logging
 log_patt = re.compile(r'data\.(.+)\.([\d]{10,})')
 logger = logging.getLogger('skypespy')
 
+class Handlers(object):
+    pass
+
 def listdirs(root_dir):
     for dirname, dirnames, filenames in os.walk(root_dir):
         for subdirname in dirnames:
@@ -31,6 +34,25 @@ def aggregate(root_dir):
                         logging.warning('could not aggregate data in %s' % path)
                     logger.info('aggregation finished')
             f_out.close()
+
+
+""" Perform a meta aggregation for previously aggregated data.
+    Meta aggregation includes:
+        - avg online time for user
+        - avg offline time for user
+"""
+def meta_aggr(root_dir):
+    if os.path.isdir(root_dir):
+        # traverse through the all subdirectories inside the data directory
+        for path in listdirs(root_dir):
+            data_path = os.path.join(path, 'data.%s' % os.path.basename(path))
+            try:
+                f_in = open(data_path, 'rb')
+
+                f_in.close()
+            except IOError:
+                continue
+ 
 
 if __name__ == '__main__':
     aggregate()
